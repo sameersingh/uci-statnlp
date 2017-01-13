@@ -1,16 +1,18 @@
 #!/bin/python
 
 def train_classifier(X, y):
+	"""Train a classifier using the given training data.
+
+	Trains a logistic regression on the input data with default parameters.
+	"""
 	from sklearn.linear_model import LogisticRegression
 	cls = LogisticRegression()
 	cls.fit(X, y)
 	return cls
 
 def evaluate(X, yt, cls):
+	"""Evaluated a classifier on the given labeled data using accuracy."""
 	from sklearn import metrics
 	yp = cls.predict(X)
-	#print metrics.classification_report(yt, yp)
 	acc = metrics.accuracy_score(yt, yp)
 	print "  Accuracy", acc
-	#f1 = metrics.f1_score(yt, yp)
-	#print "  F1", f1

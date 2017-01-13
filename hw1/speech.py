@@ -1,6 +1,21 @@
 #!/bin/python
 
 def read_files(tarfname):
+	"""Read the training and development data from the speech tar file.
+	The returned object contains various fields that store the data, such as:
+
+	train_data,dev_data: array of documents (array of words)
+	train_fnames,dev_fnames: list of filenames of the doccuments (same length as data)
+	train_labels,dev_labels: the true string label for each document (same length as data)
+
+	The data is also preprocessed for use with scikit-learn, as:
+
+	count_vec: CountVectorizer used to process the data (for reapplication on new data)
+	trainX,devX: array of vectors representing Bags of Words, i.e. documents processed through the vectorizer
+	le: LabelEncoder, i.e. a mapper from string labels to ints (stored for reapplication)
+	target_labels: List of labels (same order as used in le)
+	trainy,devy: array of int labels, one for each document
+	"""
 	import tarfile
 	tar = tarfile.open(tarfname, "r:gz")
 	class Data: pass
@@ -26,6 +41,14 @@ def read_files(tarfname):
 	return speech
 
 def read_unlabeled(tarfname, speech):
+	"""Reads the unlabeled data.
+
+	The returned object contains three fields that represent the unlabeled data.
+
+	data: documents, represented as sequence of words
+	fnames: list of filenames, one for each document
+	X: bag of word vector for each document, using the speech.vectorizer
+	"""
 	import tarfile
 	tar = tarfile.open(tarfname, "r:gz")
 	class Data: pass
@@ -58,6 +81,13 @@ def read_tsv(tar, fname):
 	return data, fnames, labels
 
 def write_pred_kaggle_file(unlabeled, cls, outfname, speech):
+	"""Writes the predictions in Kaggle format.
+
+	Given the unlabeled object, classifier, outputfilename, and the speech object,
+	this function write the predictions of the classifier on the unlabeled data and
+	writes it to the outputfilename. The speech object is required to ensure
+	consistent label names.
+	"""
 	yp = cls.predict(unlabeled.X)
 	labels = speech.le.inverse_transform(yp)
 	f = open(outfname, 'w')
@@ -77,6 +107,11 @@ def file_to_id(fname):
 	return str(int(fname.replace("unlabeled/","").replace("labeled/","").replace(".txt","")))
 
 def write_gold_kaggle_file(tsvfile, outfname):
+	"""Writes the output Kaggle file of the truth.
+
+	You will not be able to run this code, since the tsvfile is not
+	accessible to you (it is the test labels).
+	"""
 	f = open(outfname, 'w')
 	f.write("FileIndex,Category\n")
 	i = 0
@@ -94,6 +129,12 @@ def write_gold_kaggle_file(tsvfile, outfname):
 	f.close()
 
 def write_basic_kaggle_file(tsvfile, outfname):
+	"""Writes the output Kaggle file of the naive baseline.
+
+	This baseline predicts OBAMA_PRIMARY2008 for all the instances.
+	You will not be able to run this code, since the tsvfile is not
+	accessible to you (it is the test labels).
+	"""
 	f = open(outfname, 'w')
 	f.write("FileIndex,Category\n")
 	i = 0
@@ -124,11 +165,12 @@ if __name__ == "__main__":
 	classify.evaluate(speech.trainX, speech.trainy, cls)
 	classify.evaluate(speech.devX, speech.devy, cls)
 
+	print "Reading unlabeled data"
+	unlabeled = read_unlabeled(tarfname, speech)
+	print "Writing pred file"
+	write_pred_kaggle_file(unlabeled, cls, "data/speech-pred.csv", speech)
+
+	# You can't run this since you do not have the true labels
 	# print "Writing gold file"
 	# write_gold_kaggle_file("data/speech-unlabeled.tsv", "data/speech-gold.csv")
-	write_basic_kaggle_file("data/speech-unlabeled.tsv", "data/speech-basic.csv")
-	#print "Reading unlabeled data"
-	#unlabeled = read_unlabeled(tarfname, speech)
-	#print "Writing pred file"
-	#write_pred_kaggle_file(unlabeled, cls, "data/speech-pred.csv", speech)
-
+	# write_basic_kaggle_file("data/speech-unlabeled.tsv", "data/speech-basic.csv")
