@@ -48,6 +48,14 @@ def term_doc_matrix():
 			m[w][i] = tf
 	return m
 
+def clustering(m, k):
+	from sklearn.cluster import KMeans
+	c = np.zeros((m.shape[1],k))
+	y_pred = KMeans(n_clusters=k).fit_predict(m.T)
+	for i in xrange(len(y_pred)):
+		c[i][y_pred[i]] = 1
+	return c
+
 def all_col_dist(m):
 	D = m.shape[1]
 	d = np.zeros((D,D))
@@ -66,11 +74,17 @@ if __name__ == "__main__":
 	plot(d)
 	plt.savefig("lsa-dists.png")
 	k = 2
+	c = clustering(m, 2)
+	plot(c)
+	plt.savefig("lsa-clusters.png")
 	s,wv,dv,mhat = pca(m,k)
 	plot(wv)
 	plt.savefig("lsa-wordv.png")
 	plot(dv)
 	plt.savefig("lsa-docv.png")
+	plt.figure()
+	plt.plot(dv[0], dv[1], 'bo')
+	plt.savefig("lsa-docv-plot.png")
 	plot(mhat)
 	plt.savefig("lsa-recon-tfm.png")
 	d = all_col_dist(mhat)
