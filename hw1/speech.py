@@ -20,13 +20,13 @@ def read_files(tarfname):
 	tar = tarfile.open(tarfname, "r:gz")
 	class Data: pass
 	speech = Data()
-	print "-- train data"
+	print("-- train data")
 	speech.train_data, speech.train_fnames, speech.train_labels = read_tsv(tar, "train.tsv")
-	print len(speech.train_data)
-	print "-- dev data"
+	print(len(speech.train_data))
+	print("-- dev data")
 	speech.dev_data, speech.dev_fnames, speech.dev_labels = read_tsv(tar, "dev.tsv")
-	print len(speech.dev_data)
-	print "-- transforming data and labels"
+	print(len(speech.dev_data))
+	print("-- transforming data and labels")
 	from sklearn.feature_extraction.text import CountVectorizer
 	speech.count_vect = CountVectorizer()
 	speech.trainX = speech.count_vect.fit_transform(speech.train_data)
@@ -60,18 +60,19 @@ def read_unlabeled(tarfname, speech):
 			unlabeled.fnames.append(m.name)
 			unlabeled.data.append(read_instance(tar, m.name))
 	unlabeled.X = speech.count_vect.transform(unlabeled.data)
-	print unlabeled.X.shape
+	print(unlabeled.X.shape)
 	tar.close()
 	return unlabeled
 
 def read_tsv(tar, fname):
 	member = tar.getmember(fname)
-	print member.name
+	print(member.name)
 	tf = tar.extractfile(member)
 	data = []
 	labels = []
 	fnames = []
 	for line in tf:
+		line = line.decode("utf-8")
 		(ifname,label) = line.strip().split("\t")
 		#print ifname, ":", label
 		content = read_instance(tar, ifname)
@@ -92,7 +93,7 @@ def write_pred_kaggle_file(unlabeled, cls, outfname, speech):
 	labels = speech.le.inverse_transform(yp)
 	f = open(outfname, 'w')
 	f.write("FileIndex,Category\n")
-	for i in xrange(len(unlabeled.fnames)):
+	for i in range(len(unlabeled.fnames)):
 		fname = unlabeled.fnames[i]
 		# iid = file_to_id(fname)
 		f.write(str(i+1))
@@ -155,19 +156,19 @@ def read_instance(tar, ifname):
 	return content
 
 if __name__ == "__main__":
-	print "Reading data"
+	print("Reading data")
 	tarfname = "data/speech.tar.gz"
 	speech = read_files(tarfname)
-   	print "Training classifier"
+	print("Training classifier")
 	import classify
 	cls = classify.train_classifier(speech.trainX, speech.trainy)
-	print "Evaluating"
+	print("Evaluating")
 	classify.evaluate(speech.trainX, speech.trainy, cls)
 	classify.evaluate(speech.devX, speech.devy, cls)
 
-	print "Reading unlabeled data"
+	print("Reading unlabeled data")
 	unlabeled = read_unlabeled(tarfname, speech)
-	print "Writing pred file"
+	print("Writing pred file")
 	write_pred_kaggle_file(unlabeled, cls, "data/speech-pred.csv", speech)
 
 	# You can't run this since you do not have the true labels
