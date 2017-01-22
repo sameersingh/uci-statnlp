@@ -15,4 +15,4 @@ def evaluate(X, yt, cls):
 	from sklearn import metrics
 	yp = cls.predict(X)
 	acc = metrics.accuracy_score(yt, yp)
-	print "  Accuracy", acc
+	print("  Accuracy", acc)
