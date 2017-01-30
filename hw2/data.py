@@ -1,5 +1,22 @@
 #!/bin/python
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+
 import numpy as np
+import sys
+
+
+# Python 3 backwards compatibility tricks
+if sys.version_info.major > 2:
+
+    def xrange(*args, **kwargs):
+        return iter(range(*args, **kwargs))
+
+    def unicode(*args, **kwargs):
+        return str(*args, **kwargs)
+
 
 def textToTokens(text):
     """Converts input string to a corpus of tokenized sentences.
@@ -44,8 +61,8 @@ def file_splitter(filename, seed = 0, train_prop = 0.7, dev_prop = 0.15,
 def read_texts(tarfname, dname):
     """Read the data from the homework data file.
 
-    Given the location of the data archive file and the name of the 
-    dataset (one of brown, reuters, or gutenberg), this returns a 
+    Given the location of the data archive file and the name of the
+    dataset (one of brown, reuters, or gutenberg), this returns a
     data object containing train, test, and dev data. Each is a list
     of sentences, where each sentence is a sequence of tokens.
     """
@@ -79,7 +96,7 @@ def read_texts(tarfname, dname):
         toks = tokenizer(s)
         if len(toks) > 0:
             data.dev.append(toks)
-    print dname," read.", "train:", len(data.train), "dev:", len(data.dev), "test:", len(data.test)
+    print(dname," read.", "train:", len(data.train), "dev:", len(data.dev), "test:", len(data.test))
     return data
 
 def learn_unigram(data):
@@ -92,14 +109,14 @@ def learn_unigram(data):
     unigram = Unigram()
     unigram.fit_corpus(data.train)
     # evaluate on train, test, and dev
-    print "train:", unigram.perplexity(data.train)
-    print "dev  :", unigram.perplexity(data.dev)
-    print "test :", unigram.perplexity(data.test)
+    print("train:", unigram.perplexity(data.train))
+    print("dev  :", unigram.perplexity(data.dev))
+    print("test :", unigram.perplexity(data.test))
     from generator import Sampler
     sampler = Sampler(unigram)
-    print "sample: ", " ".join(str(x) for x in sampler.sample_sentence([]))
-    print "sample: ", " ".join(str(x) for x in sampler.sample_sentence([]))
-    print "sample: ", " ".join(str(x) for x in sampler.sample_sentence([]))
+    print("sample: ", " ".join(str(x) for x in sampler.sample_sentence([])))
+    print("sample: ", " ".join(str(x) for x in sampler.sample_sentence([])))
+    print("sample: ", " ".join(str(x) for x in sampler.sample_sentence([])))
     return unigram
 
 def print_table(table, row_names, col_names, latex_file = None):
@@ -110,30 +127,30 @@ def print_table(table, row_names, col_names, latex_file = None):
     """
     try:
         from tabulate import tabulate
-        rows = map(lambda (r,t): [r] + t, zip(row_names,table.tolist()))
-        print tabulate(rows, headers = [""] + col_names)
+        rows = map(lambda r,t: [r] + t, zip(row_names,table.tolist()))
+        print(tabulate(rows, headers = [""] + col_names))
         if latex_file is not None:
             latex_str = tabulate(rows, headers = [""] + col_names, tablefmt="latex")
             with open(latex_file, 'w') as f:
                 f.write(latex_str)
                 f.close()
-    except ImportError, e:
-        row_format ="{:>15}" * (len(col_names) + 1)
-        print row_format.format("", *col_names)
+    except ImportError as e:
+        row_format ="{:>15} " * (len(col_names) + 1)
+        print(row_format.format("", *col_names))
         for row_name, row in zip(row_names, table):
-            print row_format.format(row_name, *row)
+            print(row_format.format(row_name, *row))
 
 if __name__ == "__main__":
     # Do no run, the following function was used to generate the splits
     # file_splitter("data/reuters.txt")
-    
+
     dnames = ["brown", "reuters", "gutenberg"]
     datas = []
     models = []
     # Learn the models for each of the domains, and evaluate it
     for dname in dnames:
-        print "-----------------------"
-        print dname
+        print("-----------------------")
+        print(dname)
         data = read_texts("data/corpora.tar.gz", dname)
         datas.append(data)
         model = learn_unigram(data)
@@ -149,12 +166,13 @@ if __name__ == "__main__":
             perp_test[i][j] = models[i].perplexity(datas[j].test)
             perp_train[i][j] = models[i].perplexity(datas[j].train)
 
-    print "-------------------------------"
-    print "x train"
+    print("-------------------------------")
+    print("x train")
     print_table(perp_train, dnames, dnames, "table-train.tex")
-    print "-------------------------------"
-    print "x dev"
+    print("-------------------------------")
+    print("x dev")
     print_table(perp_dev, dnames, dnames, "table-dev.tex")
-    print "-------------------------------"
-    print "x test"
+    print("-------------------------------")
+    print("x test")
     print_table(perp_test, dnames, dnames, "table-test.tex")
+

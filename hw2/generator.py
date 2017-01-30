@@ -1,4 +1,7 @@
 #!/bin/python
+
+from __future__ import print_function
+
 from lm import LangModel
 import random
 from math import log
@@ -68,7 +71,8 @@ if __name__ == "__main__":
         [ "sam", "i", "am" ]
     ]
     unigram.fit_corpus(corpus)
-    print unigram.model
+    print(unigram.model)
     sampler = Sampler(unigram)
     for i in xrange(10):
-        print i, ":", " ".join(str(x) for x in sampler.sample_sentence([]))
+        print(i, ":", " ".join(str(x) for x in sampler.sample_sentence([])))
+
