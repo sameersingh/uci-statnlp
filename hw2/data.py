@@ -108,7 +108,7 @@ def learn_unigram(data):
     from lm import Unigram
     unigram = Unigram()
     unigram.fit_corpus(data.train)
-    print "vocab:", len(unigram.vocab())
+    print("vocab:", len(unigram.vocab()))
     # evaluate on train, test, and dev
     print("train:", unigram.perplexity(data.train))
     print("dev  :", unigram.perplexity(data.dev))
