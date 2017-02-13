@@ -76,6 +76,7 @@ def file_splitter(all_file, train_file, dev_file):
     dev_f.close()
 
 def synthetic_data():
+    """A very simple, three sentence dataset, that tests some generalization."""
     class Data: pass
     data = Data()
     data.train_sents = [
@@ -113,7 +114,11 @@ if __name__ == "__main__":
     import tagger
     tagger = tagger.LogisticRegressionTagger()
     #tagger = tagger.CRFPerceptron()
+
+    # Train the tagger
     tagger.fit_data(data.train_sents, data.train_labels)
+
+    # Evaluation (also writes out predictions)
     print "### Train evaluation"
     data.train_preds = tagger.evaluate_data(data.train_sents, data.train_labels)
     write_preds("data/twitter_train.%s.pred" % dname,
