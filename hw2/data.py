@@ -91,6 +91,7 @@ def learn_unigram(data):
     from lm import Unigram
     unigram = Unigram()
     unigram.fit_corpus(data.train)
+    print "vocab:", len(unigram.vocab())
     # evaluate on train, test, and dev
     print "train:", unigram.perplexity(data.train)
     print "dev  :", unigram.perplexity(data.dev)
@@ -126,7 +127,7 @@ def print_table(table, row_names, col_names, latex_file = None):
 if __name__ == "__main__":
     # Do no run, the following function was used to generate the splits
     # file_splitter("data/reuters.txt")
-    
+
     dnames = ["brown", "reuters", "gutenberg"]
     datas = []
     models = []
