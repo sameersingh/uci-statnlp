@@ -229,7 +229,7 @@ class CRFPerceptron(Tagger):
         y = []
         for ls in labels:
             y.append(self.le.transform(ls))
-        print len(y), y[0].shape
+        print "Classes:", len(self.le.classes_), self.le.classes_
         # compute all the token features, store as seq of seq of feature indices
         # i.e. each token has a list of feature indices
         Xidxs = self.feats.index_data(sents)
