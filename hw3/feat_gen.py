@@ -45,11 +45,16 @@ def token2features(sent, i, add_neighs = True):
     ftrs.append("WORD=" + word)
     ftrs.append("LCASE=" + word.lower())
     # some features of the word
-    ftrs.append("IS_ALNUM=" + str(word.isalnum()))
-    ftrs.append("IS_NUMERIC=" + str(word.isnumeric()))
-    ftrs.append("IS_DIGIT=" + str(word.isdigit()))
-    ftrs.append("IS_UPPER=" + str(word.isupper()))
-    ftrs.append("IS_LOWER=" + str(word.islower()))
+    if word.isalnum():
+        ftrs.append("IS_ALNUM")
+    if word.isnumeric():
+        ftrs.append("IS_NUMERIC")
+    if word.isdigit():
+        ftrs.append("IS_DIGIT")
+    if word.isupper():
+        ftrs.append("IS_UPPER")
+    if word.islower():
+        ftrs.append("IS_LOWER")
 
     # previous/next word feats
     if add_neighs:
@@ -62,3 +67,12 @@ def token2features(sent, i, add_neighs = True):
 
     # return it!
     return ftrs
+
+if __name__ == "__main__":
+    sents = [
+    [ "I", "love", "food" ]
+    ]
+    preprocess_corpus(sents)
+    for sent in sents:
+        for i in xrange(len(sent)):
+            print sent[i], ":", token2features(sent, i)
