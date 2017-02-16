@@ -10,12 +10,13 @@ def read_twitter(dname="ner"):
     data.train_sents, data.train_labels = read_file("data/twitter_train." + dname)
     data.dev_sents, data.dev_labels = read_file("data/twitter_dev." + dname)
     # test data
-    data.test_sents, data.test_labels = read_file("data/twitter_test." + dname)
+    # Following is commented, only useful once test data is available.
+    # data.test_sents, data.test_labels = read_file("data/twitter_test." + dname)
     # print statistics
     print "Twitter %s data loaded." % dname
     print ".. # train sents", len(data.train_sents)
     print ".. # dev sents", len(data.dev_sents)
-    print ".. # test sents", len(data.test_sents)
+    # print ".. # test sents", len(data.test_sents)
     return data
 
 def read_file(filename):
@@ -52,7 +53,7 @@ def write_preds(fname, sents, labels, preds):
 def write_sent(f, toks, labels, pred = None):
     """Writes the output of a sentence in CONLL format, including predictions (if pred is not None)"""
     for i in xrange(len(toks)):
-        f.write(toks[i] + "\t" + labels[i])
+        f.write(toks[i].encode('utf-8') + "\t" + labels[i])
         if pred is not None:
             f.write("\t" + pred[i])
         f.write("\n")
@@ -99,8 +100,6 @@ def synthetic_data():
         [ "PER", "O", "O", "ADJ" , "END"],
         [ "ADJ", "O", "PER", "O", "PER", "END"]
     ]
-    data.test_sents = data.train_sents
-    data.test_labels = data.train_labels
     return data
 
 if __name__ == "__main__":
@@ -127,8 +126,10 @@ if __name__ == "__main__":
     data.dev_preds = tagger.evaluate_data(data.dev_sents, data.dev_labels)
     write_preds("data/twitter_dev.%s.pred" % dname, 
         data.dev_sents, data.dev_labels, data.dev_preds)
-    print "### Test evaluation"
-    data.test_preds = tagger.evaluate_data(data.test_sents, data.test_labels)
-    write_preds("data/twitter_test.%s.pred" % dname, 
-        data.test_sents, data.test_labels, data.test_preds)
+
+    # Following is commented, only useful once test data is available.
+    # print "### Test evaluation"
+    # data.test_preds = tagger.evaluate_data(data.test_sents, data.test_labels)
+    # write_preds("data/twitter_test.%s.pred" % dname, 
+    #     data.test_sents, data.test_labels, data.test_preds)
     
