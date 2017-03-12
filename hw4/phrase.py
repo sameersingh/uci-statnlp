@@ -94,7 +94,7 @@ class PhraseTable:
                         P.append(p)
                 elif t-s == 0:
                     # include word copying
-                    p = Phrase(s+1,t+1,source_sent[s],self.min_score + 2.0)
+                    p = Phrase(s+1,t+1,[source_sent[s]],self.min_score + 2.0)
                     P.append(p)
         return P
 
