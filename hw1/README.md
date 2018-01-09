@@ -8,7 +8,7 @@ You will need to download `speech.tar.gz` file from the Kaggle website, and put 
 
  This will train a default logistic regression classifier, and save the output predictions in `data/speech-basic.csv`. If you like, you can upload this file to Kaggle, and make sure you are getting the same/similar performance as the benchmarks on Kaggle.
 
-The current assignment description is available [here](http://sameersingh.org/courses/statnlp/wi17/assignments.html#hw1).
+The current assignment description is available [here](http://sameersingh.org/courses/statnlp/wi18/assignments.html#hw1).
 
 ## Files
 
