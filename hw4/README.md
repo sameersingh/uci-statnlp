@@ -1,32 +1,68 @@
-# HW4: Phrase-Based Translation
+HW4: Neural Machine Translation
+===
 
-You will need to download `data.tar.gz` file from the course website, and *uncompress* it into the `data` folder inside `hw4` (if you put it elsewhere, change the location in the code). You should be then able to run:
 
- ```
- python data.py
- ```
+Assignment Description
+---
+In this programming assignment, you will design and train a neural machine translation system.
+We have included a basic sequence-to-sequence model implemented in PyTorch for you to build upon.
+Your task will be to build on this basic implementation in some way. Some ideas to try are (in order of increasing difficulty):
 
-The current assignment description is available [here](http://sameersingh.org/courses/statnlp/wi17/assignments.html#hw4).
+1. Changing the number of layers/hidden units/activation functions in the network architecture.
+2. Making the encoder bidirectional.
+3. Adding an attention mechanism to learn alignment. See [this paper](https://arxiv.org/abs/1409.0473) for more details.
+4. Using beam-search in your decoder (with a beam-width larger than 1).
 
-## Files
+**Note: We highly reccomend getting an early start on this assignment!
+Getting the proper hardware set up, and training neural networks can both be very frusterating and time consuming processes - especially if you have not done so in the past.
+Please contact us early on if you are having difficulties.
+Do not expect any sympathy if you start the project days before the deadline and encounter issues.**
 
-There are quite a few files in this folder:
 
-* `lm.py`: Similar to the assignment in HW2, this code provides an implementation of a Trigram language model with Kneser-Ney smoothing, along with the parameters of such a model trained on a really large corpus of English documents. Note, since we are computing $P(f|e)P(e)$, we do not require a language model of French in order to perform the decoding. The format of the language model file, known as the ARPA model, consists of 1-, 2-, and 3-grams, with their log probabilities and backoff scores.
-You can load and query the language model using the main function of this file.
+Requirements
+---
+In addition, to an up-to-date installation of Python (e.g. 2.7 or 3.5+) you will also need to install the PyTorch neural network library.
+Installation instructions can be found at <http://pytorch.org/>.
+We also *strongly* reccommend that you use a NVIDIA CUDA enabled GPU to train your model (otherwise it is very unlikely you will be able to finish training before the deadline).
+If you do not own a GPU do not worry, you can obtain *free* access to one through the [Google Cloud](https://cloud.google.com/) platform.
+You may apply for credits [here]().
+To help get aquainted with this system we reccommend checking out Stanford CS231n's [Google Cloud tutorial](http://cs231n.github.io/gce-tutorial/).
 
-* `phrase.py`: Code for the French to English phrase table. Each line in the file contains a pair of these phrases, along with a number of scores for different *features* of the pair. The code reads this file and computes the single score $g_p$ for each pair of phrases. This code also provides a handy method to get all the possible phrase translations for a given sentence, i.e. `phrases()` corresponds to `Phrases` in the pseudocode.
-You can investigate the translation table as shown in the main function.
 
-* `decoder.py`: Implementation of the multiple stack-based decoding algorithm.
-This implementation attempts to follow the above notation of the pseudocode (and Collins' notes) as much as possible, deviating as needed for an optimized implementation.
-The code implements a working monotonic decoder that does not take the language model into account.
-This is especially important when you are looking at the code for finding compatible phrases (`Compatible`), computing the language model score (`lm_score`), and the distortion score (`dist_score`).
-Some code that differs from the pseudocode includes precomputing the set of phrases that should be considered for position $r$ in `index_phrases` and extra fields in the state to make equality comparisons efficient (`key` in `State`). You will need to develop a reasonable understanding of this code, so please post privately or publicly on Piazza if you are not able to understand something.
+Files
+---
+* `model.py`: Contains the basic sequence-to-sequence model implementation.
+* `train.py`: A script used to train the model.
+* `translate.py`: A script used to generate translations.
+* `TBD`: BLEU score evaluation script from moses-nmt.
 
-* `submission.py`: Skeleton code for the submission. It contains the three types of decoders, out of which only the first one, `MonotonicDecoder`, works as intended. You have to implement the other functions in this skeleton.
 
-* `data.py`: This is the code that reads in the files related to the translation model, reads French sentences from `test.fr`, corresponding English translations from `test.en`, runs the model on the French sentences, and computes the Bleu score on the predictions.
-It also contains some simple words and phrases to translate into French, just to test your decoder.
+Instructions
+---
 
-* `bleu_score.py`: Code for computing the Bleu score for each translation/prediction pair (this code was ported from NLTK by Zhengli Zhao).
+
+#### Training
+To train the model, make sure that all of the lines in the `config.yaml` file point to the correct directories on your system.
+Then run:
+
+```bash
+train.py --config config.yaml`
+```
+
+
+#### Generating translations
+To generate translations run:
+
+```bash
+translate.py --input src.txt --output tgt.txt --checkpoint data/ckpt.pt
+```
+
+
+#### Evaluation
+
+To evaluate the model run:
+
+```bash
+TBD (correct args)
+```
+
