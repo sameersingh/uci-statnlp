@@ -173,27 +173,27 @@ Using Jupyter
 The following section is taken from Stanford CS231n's [Google Cloud tutorial](https://github.com/cs231n/cs231n.github.io/blob/master/google_cloud_tutorial.md) (provided under the MIT License).
 
 Change the Extenal IP address of your GCE instance to be static (see screenshot below).
-![]('img/cloud-external-ip.png')
+![](img/cloud-external-ip.png)
 
 To do this, click on the 3 line icon next to the **Google Cloud Platform** button on the top left corner of your screen, go to **Networking** and **External IP addresses** (see screenshot below).
 
-![]('img/cloud-networking-external-ip.png')
+![](img/cloud-networking-external-ip.png)
 
 To have a static IP address, change **Type** from **Ephemeral** to **Static**. Enter your preffered name for your static IP, mine is assignment-1 (see screenshot below). And click on Reserve. Remember to release the static IP address when you are done because according to [this page](https://jeffdelaney.me/blog/running-jupyter-notebook-google-cloud-platform/ "Title") Google charges a small fee for unused static IPs. **Type** should now be set to **Static**.
 
-![]('img/cloud-networking-external-ip-naming.png')
+![](img/cloud-networking-external-ip-naming.png)
 
 Take note of your Static IP address (circled on the screenshot below). I used 104.196.224.11 for this tutorial.
 
-![]('img/cloud-networking-external-ip-address.png')
+![](img/cloud-networking-external-ip-address.png)
 
 One last thing you have to do is adding a new firewall rule allowing TCP acess to a particular \<PORT-NUMBER\>. I usually use 7000 or 8000 for \<PORT-NUMBER\>. Click on the 3 line icon at the top of the page next to **Google Cloud Platform**. On the menu that pops up on the left column, go to **Networking** and **Firewall rules** (see the screenshot below).
 
-![]('img/cloud-networking-firewall-rule.png')
+![](img/cloud-networking-firewall-rule.png)
 
 Click on the blue **CREATE FIREWALL RULE** button. Enter whatever name you want: I used assignment1-rules. Enter 0.0.0.0/0 for **Source IP ranges** and tcp:\<PORT-NUMBER\> for **Allowed protocols and ports** where \<PORT-NUMBER\> is the number you used above. Click on the blue **Create** button. See the screen shot below.
 
-![]('img/cloud-networking-firewall-rule-create.png')
+![](img/cloud-networking-firewall-rule-create.png)
 
 **NOTE:** Some people are seeing a different screen where instead of **Allowed protocols and ports** there is a field titled **Specified protocols and ports**. You should enter tcp:\<PORT-NUMBER\> for this field if this is the page you see. Also, if you see a field titled **Targets** select **All instances in the network**.
 
@@ -251,5 +251,5 @@ Where \<PORT-NUMBER\> is what you wrote in the prior section.
 
 On your local browser, if you go to http://\<YOUR-EXTERNAL-IP-ADDRESS>:\<PORT-NUMBER\>, you should see something like the screen below. My value for \<YOUR-EXTERNAL-IP-ADDRESS\> was 104.196.224.11 as mentioned above. You should now be able to start working on your assignments.
 
-![]('img/jupyter-screen.png')
+![](img/jupyter-screen.png)
 
