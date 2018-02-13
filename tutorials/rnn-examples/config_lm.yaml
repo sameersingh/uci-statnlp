@@ -1,0 +1,12 @@
+data:
+    train: './data/en-ud-train.conllu'
+    checkpoint: './data/language_model.pt'
+
+model:
+    embedding_dim: 200
+    hidden_size: 512
+    num_layers: 2
+
+training:
+    num_epochs: 25
+    batch_size: 8
