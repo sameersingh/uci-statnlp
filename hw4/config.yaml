@@ -1,0 +1,20 @@
+data:
+    src:
+        train: './data/shakespeare.modern.train'
+        dev: './data/shakespeare.modern.dev'
+        test: './data/shakespeare.modern.test'
+        vocab: './data/shakespeare.modern.vocab'
+    tgt:
+        train: './data/shakespeare.original.train'
+        dev: './data/shakespeare.original.dev'
+        test: './data/shakespeare.original.test'
+        vocab: './data/shakespeare.original.vocab'
+    ckpt: './data/ckpt/model.pt'
+
+model:
+    embedding_dim: 512
+
+training:
+    num_epochs: 25
+    learning_rate: 0.0003
+
