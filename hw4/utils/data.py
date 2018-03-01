@@ -2,8 +2,10 @@
 
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import torch
+import codecs
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 
@@ -22,9 +24,9 @@ class ShakespeareDataset(Dataset):
         self.tgt_vocab = tgt_vocab
 
         # Load data.
-        with open(config['data']['src'][mode], 'r') as f:
+        with codecs.open(config['data']['src'][mode], 'r', encoding='utf-8') as f:
             self.src_data = f.readlines()
-        with open(config['data']['tgt'][mode], 'r') as f:
+        with codecs.open(config['data']['tgt'][mode], 'r', encoding='utf-8') as f:
             self.tgt_data = f.readlines()
 
         # Check src and tgt datasets are the same length.

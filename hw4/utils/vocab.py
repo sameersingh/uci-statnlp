@@ -10,8 +10,10 @@ text corpora and serializing them to disk. Example usage:
 """
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import argparse
+import codecs
 from collections import Counter
 
 
@@ -85,17 +87,18 @@ class Vocab(object):
         self._word2id = {y: x for x, y in enumerate(self._id2word)}
 
     @classmethod
-    def load(cls, f):
+    def load(cls, fname):
         """Loads the vocabulary from a file.
 
         Args:
-            f: File whose lines contain the vocab words.
+            fname: Name of file containing the serialized vocabulary.
 
         Returns:
             The loaded vocabulary.
         """
         vocab = cls()
-        word_count_tuples = [line.strip().split('\t') for line in f]
+        with codecs.open(fname, 'r', encoding='utf-8') as f:
+            word_count_tuples = [line.strip().split('\t') for line in f]
         word_count_tuples = [(x, int(y)) for x, y in word_count_tuples]
         counter = Counter()
         for word, count in word_count_tuples:
@@ -103,22 +106,23 @@ class Vocab(object):
         vocab.from_counter(counter)
         return vocab
 
-    def dump(self, f):
+    def dump(self, fname):
         """Dumps the vocabulary to a file.
 
         Args:
-            f: File to dump the vocabulary to.
+            fname: Name of the file to dump the vocabulary to.
         """
         template = '%s\t%i\n'
-        for word, count in self._counter.most_common():
-            f.write(template % (word, count))
+        with codecs.open(fname, 'w', encoding='utf-8') as f:
+            for word, count in self._counter.most_common():
+                f.write(template % (word, count))
 
 
 def main(_):
     counter = Counter()
 
     print('Parsing %s' % FLAGS.input)
-    with open(FLAGS.input, 'r') as f:
+    with codecs.open(FLAGS.input, 'r', encoding='utf-8') as f:
         for line in f:
             words = line.split()
             counter.update(words)
@@ -127,8 +131,7 @@ def main(_):
     vocab.from_counter(counter)
 
     print('Writing to %s' % FLAGS.output)
-    with open(FLAGS.output, 'w') as f:
-        vocab.dump(f)
+    vocab.dump(FLAGS.output)
 
     print('Done')
 

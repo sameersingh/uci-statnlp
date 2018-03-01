@@ -5,8 +5,10 @@ Usage:
 """
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import argparse
+import codecs
 import numpy as np
 import os
 import shutil
@@ -45,10 +47,8 @@ def main(_):
         shutil.copyfile(FLAGS.config, prev_config_path)
 
     # Load the vocabularies.
-    with open(config['data']['src']['vocab'], 'r') as f:
-        src_vocab = Vocab.load(f)
-    with open(config['data']['tgt']['vocab'], 'r') as f:
-        tgt_vocab = Vocab.load(f)
+    src_vocab = Vocab.load(config['data']['src']['vocab'])
+    tgt_vocab = Vocab.load(config['data']['tgt']['vocab'])
 
     # Load the training and dev datasets.
     train_data = ShakespeareDataset('train', config, src_vocab, tgt_vocab)
@@ -90,7 +90,7 @@ def main(_):
         epoch = 0
 
     train_log_string = '%s :: Epoch %i :: Iter %i / %i :: train loss: %0.4f'
-    dev_log_string = '/n%s :: Epoch %i :: dev loss: %0.4f'
+    dev_log_string = '\n%s :: Epoch %i :: dev loss: %0.4f'
     while epoch < config['training']['num_epochs']:
 
         # Main training loop.

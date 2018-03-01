@@ -5,6 +5,7 @@ Usage:
 """
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import argparse
 import numpy as np
@@ -75,10 +76,8 @@ def main(_):
         config = yaml.load(f)
 
     # Load the vocabularies.
-    with open(config['data']['src']['vocab'], 'r') as f:
-        src_vocab = Vocab.load(f)
-    with open(config['data']['tgt']['vocab'], 'r') as f:
-        tgt_vocab = Vocab.load(f)
+    src_vocab = Vocab.load(config['data']['src']['vocab'])
+    tgt_vocab = Vocab.load(config['data']['tgt']['vocab'])
 
     # Load the training and dev datasets.
     test_data = ShakespeareDataset('test', config, src_vocab, tgt_vocab)
