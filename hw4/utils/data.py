@@ -12,19 +12,21 @@ from .vocab import Vocab
 
 class ShakespeareDataset(Dataset):
 
-    def __init__(self, mode, config):
+    def __init__(self, mode, config, src_vocab, tgt_vocab):
         # Check mode.
-        assert mode in ['train', 'dev', 'eval']
+        assert mode in ['train', 'dev', 'test']
         self.mode = mode
+
+        # Assign vocabularies.
+        self.src_vocab = src_vocab
+        self.tgt_vocab = tgt_vocab
+
         # Load data.
         with open(config['data']['src'][mode], 'r') as f:
             self.src_data = f.readlines()
-        with open(config['data']['src']['vocab'], 'r') as f:
-            self.src_vocab = Vocab.load(f)
         with open(config['data']['tgt'][mode], 'r') as f:
             self.tgt_data = f.readlines()
-        with open(config['data']['tgt']['vocab'], 'r') as f:
-            self.tgt_vocab = Vocab.load(f)
+
         # Check src and tgt datasets are the same length.
         assert len(self.src_data) == len(self.tgt_data)
 
@@ -35,17 +37,21 @@ class ShakespeareDataset(Dataset):
         # Split sentence into words.
         src_words = self.src_data[idx].split()
         tgt_words = self.tgt_data[idx].split()
+
         # Add <SOS> and <EOS> tokens.
         src_words = [self.src_vocab.sos_token] + src_words + [self.src_vocab.eos_token]
-        tgt_words = [self.tgt_vocab.sos_token] + src_words + [self.tgt_vocab.eos_token]
+        tgt_words = [self.tgt_vocab.sos_token] + tgt_words + [self.tgt_vocab.eos_token]
+
         # Lookup word ids in vocabularies.
         src_ids = [self.src_vocab.word2id(word) for word in src_words]
         tgt_ids = [self.tgt_vocab.word2id(word) for word in tgt_words]
+
         # Convert to tensors.
         src_tensor = Variable(torch.LongTensor(src_ids))
         tgt_tensor = Variable(torch.LongTensor(tgt_ids))
         if torch.cuda.is_available():
             src_tensor = src_tensor.cuda()
-            tgt_tensot = tgt_tensor.cuda()
+            tgt_tensor = tgt_tensor.cuda()
+
         return src_tensor, tgt_tensor
 

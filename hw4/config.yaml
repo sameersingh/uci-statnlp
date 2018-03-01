@@ -1,20 +1,22 @@
+experiment_name: 'baseline'
+
 data:
-    src:
+    tgt:
         train: './data/shakespeare.modern.train'
         dev: './data/shakespeare.modern.dev'
         test: './data/shakespeare.modern.test'
         vocab: './data/shakespeare.modern.vocab'
-    tgt:
+    src:
         train: './data/shakespeare.original.train'
         dev: './data/shakespeare.original.dev'
         test: './data/shakespeare.original.test'
         vocab: './data/shakespeare.original.vocab'
-    ckpt: './data/ckpt/model.pt'
+    ckpt: './data/ckpt'
 
 model:
     embedding_dim: 512
 
 training:
-    num_epochs: 25
+    num_epochs: 3
     learning_rate: 0.0003
 

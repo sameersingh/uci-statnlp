@@ -15,7 +15,7 @@ import argparse
 from collections import Counter
 
 
-FLAGS = None 
+FLAGS = None
 
 
 class Vocab(object):
@@ -64,9 +64,9 @@ class Vocab(object):
         Args:
             id: Index to lookup.
         """
-        if id < len(self):
+        if id < len(self) - 1:
             return self._id2word[id]
-        elif id == len(self):
+        elif id == len(self) - 1:
             return self.unk_token
         else:
             raise KeyError('Index larger than vocab size.')

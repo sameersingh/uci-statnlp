@@ -10,27 +10,21 @@ If you choose to store the data in another location, make sure to update the app
 Dependencies
 ---
 
-This code is Python 2.7 and Python 3.5+ compatible.
+This code is Python 2.7 and Python 3.5+ compatible. You will also need the following libraries:
 
-You will also need the following libraries:
-
-- PyTorch (0.3.1)
+- PyTorch
+- NLTK
 
 
 Files
 ---
 
-Files you will need to make changes to:
-
 - `model.py`: Code for the neural machine translation model.
-    Following the basic Seq2Seq structure, the model is comprised of two parts: an *encoder* and a *decoder*.
-    The *encoder* embeds words from the source sentence and then feeds these embeddings through an LSTM.
-    The *decoder* generates the target sentence using another LSTM, whose initial hidden state is the final hidden state of the *encoder*.
+    Following the basic sequence-to-sequence structure, the model is comprised of two parts: an `Encoder` and a `Decoder`.
+    `Encoder` embeds words from the source sentence and then feeds these embeddings through an RNN.
+    `Decoder` generates the target sentence using another LSTM, whose initial hidden state is the final hidden state output by the `Encoder`.
 
-- `config.yaml`: Model configuration parameters. 
-
-
-Files you should not need to make changes to:
+- `config.yaml`: Model configuration parameters.
 
 - `train.py`: Model training script.
     To use it, run: `python train.py --config config.yaml`.

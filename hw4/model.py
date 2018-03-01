@@ -29,7 +29,7 @@ class Encoder(nn.Module):
 
         # Define the model layers.
         self.embedding = nn.Embedding(src_vocab_size, embedding_dim)
-        self.rnn = nn.GRU(embedding_dim, embedding_dim)
+        self.rnn = nn.RNN(embedding_dim, embedding_dim)
 
         # Initialize the embedding weights.
         nn.init.xavier_uniform(self.embedding.weight)
@@ -79,7 +79,7 @@ class Decoder(nn.Module):
 
         # Define the model layers.
         self.embedding = nn.Embedding(tgt_vocab_size, embedding_dim)
-        self.rnn = nn.GRU(embedding_dim, embedding_dim)
+        self.rnn = nn.RNN(embedding_dim, embedding_dim)
         self.fc = nn.Linear(embedding_dim, tgt_vocab_size)
 
         # Initialize the embedding weights.
