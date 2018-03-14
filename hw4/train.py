@@ -137,15 +137,15 @@ def main(_):
             src_length = src.size()[0]
             hidden = None
             for j in reversed(range(src_length)):
-                encoder_output, hidden = encoder(src[i], hidden)
+                encoder_output, hidden = encoder(src[j], hidden)
 
             # Feed desired outputs one by one from tgt into decoder
             # and measure loss.
             tgt_length = tgt.size()[0]
             loss = 0
             for j in range(tgt_length - 1):
-                decoder_output, hidden = decoder(tgt[i], hidden)
-                loss += criterion(decoder_output, tgt[i+1])
+                decoder_output, hidden = decoder(tgt[j], hidden)
+                loss += criterion(decoder_output, tgt[j+1])
 
             dev_loss.append(loss.data.cpu())
 
