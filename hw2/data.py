@@ -124,11 +124,11 @@ def print_table(table, row_names, col_names, latex_file = None):
     """Pretty prints the table given the table, and row and col names.
 
     If a latex_file is provided (and tabulate is installed), it also writes a
-    file containing the LaTeX source of the table (which you can \input into your report)
+    file containing the LaTeX source of the table (which you can \\input into your report)
     """
     try:
         from tabulate import tabulate
-        rows = map(lambda r,t: [r] + t, zip(row_names,table.tolist()))
+        rows = map(lambda rt: [rt[0]] + rt[1], zip(row_names,table.tolist()))
         print(tabulate(rows, headers = [""] + col_names))
         if latex_file is not None:
             latex_str = tabulate(rows, headers = [""] + col_names, tablefmt="latex")
@@ -161,8 +161,8 @@ if __name__ == "__main__":
     perp_dev = np.zeros((n,n))
     perp_test = np.zeros((n,n))
     perp_train = np.zeros((n,n))
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(n):
+        for j in range(n):
             perp_dev[i][j] = models[i].perplexity(datas[j].dev)
             perp_test[i][j] = models[i].perplexity(datas[j].test)
             perp_train[i][j] = models[i].perplexity(datas[j].train)
