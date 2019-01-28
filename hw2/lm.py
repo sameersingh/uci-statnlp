@@ -61,8 +61,9 @@ class LangModel:
     def vocab(self): pass
 
 class Unigram(LangModel):
-    def __init__(self):
+    def __init__(self, unk_prob=0.0001):
         self.model = dict()
+        self.lunk_prob = log(unk_prob, 2)
 
     def inc_word(self, w):
         if w in self.model:
@@ -88,7 +89,7 @@ class Unigram(LangModel):
         if word in self.model:
             return self.model[word]
         else:
-            return -log(numOOV, 2)
+            return self.lunk_prob-log(numOOV, 2)
 
     def vocab(self):
         return self.model.keys()
