@@ -128,7 +128,7 @@ def print_table(table, row_names, col_names, latex_file = None):
     """
     try:
         from tabulate import tabulate
-        rows = map(lambda rt: [rt[0]] + rt[1], zip(row_names,table.tolist()))
+        rows = [*map(lambda rt: [rt[0]] + rt[1], zip(row_names,table.tolist()))]
         print(tabulate(rows, headers = [""] + col_names))
         if latex_file is not None:
             latex_str = tabulate(rows, headers = [""] + col_names, tablefmt="latex")
