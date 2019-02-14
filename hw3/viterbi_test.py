@@ -1,5 +1,6 @@
 #!/bin/python
 
+
 def run_viterbi_test():
     """A simple tester for Viterbi algorithm.
 
@@ -27,7 +28,7 @@ def run_viterbi_test():
     passed_y = 0 # how many times the correct sequence was predicted
     passed_s = 0 # how many times the correct score was returned
 
-    for t in xrange(num_tests):
+    for t in range(num_tests):
         N = random.randint(1, maxN+1)
         L = random.randint(2, maxL+1)
 
@@ -48,7 +49,7 @@ def run_viterbi_test():
             # compute its score
             score = 0.0
             score += start_scores[y[0]]
-            for i in xrange(N-1):
+            for i in range(N-1):
                 score += trans_scores[y[i], y[i+1]]
                 score += emission_scores[i,y[i]]
             score += emission_scores[N-1,y[N-1]]
@@ -61,7 +62,7 @@ def run_viterbi_test():
 
         # mismatch if any label prediction doesn't match
         match_y = True
-        for i in xrange(len(best_y)):
+        for i in range(len(best_y)):
             if viterbi_y[i] != best_y[i]:
                 match_y = False
         if match_y: passed_y += 1
@@ -69,10 +70,11 @@ def run_viterbi_test():
         if abs(viterbi_s-best_s) < tolerance:
             passed_s += 1
 
-    print "Passed(y)", passed_y*100.0/num_tests
-    print "Passed(s)", passed_s*100.0/num_tests
+    print("Passed(y)", passed_y*100.0/num_tests)
+    print("Passed(s)", passed_s*100.0/num_tests)
     assert passed_y == num_tests
     assert passed_s == num_tests
+
 
 if __name__ == "__main__":
     run_viterbi_test()
