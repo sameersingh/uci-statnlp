@@ -14,7 +14,7 @@
   },
   "train_data_path": "./data/twitter_train.ner",
   "validation_data_path": "./data/twitter_dev.ner",
-  "test_data_path": "./data/twitter_test.ner",
+  "test_data_path": "./data/twitter_dev.ner",
   "evaluate_on_test": true,
   "model": {
     "type": "simple_tagger",
