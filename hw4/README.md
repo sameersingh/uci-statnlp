@@ -14,7 +14,7 @@ allennlp train config/naive_{java,python} -s models/naive_{java,python} --includ
 
 To serve a demo after training, you need to run:
 ```
-python -m allennlp.service.server_simple --archive-path [MODEL_DIR]/model.tar.gz     --predictor informed_seq2seq_predictor --include-package informed_seq2seq --include-package informed_seq2seq_reader --include-package informed_seq2seq_predictor --title "Code to Text" --field-name source --field-name extra
+python -m allennlp.service.server_simple --archive-path [MODEL_DIR]/model.tar.gz --predictor informed_seq2seq_predictor --include-package informed_seq2seq --include-package informed_seq2seq_reader --include-package informed_seq2seq_predictor --title "Code to Text" --field-name source --field-name extra
 ```
 
 ## Files
@@ -31,7 +31,7 @@ We have included additional hooks into the code for supporting the "informed" ve
 These configuration files "turn off" the extra embedding part, and run the model in `informed_seq2seq.py`.
 * `informed_{java,python}.json`:
   Configuration files that "enable" the extra encoder/embedding part, which, if your implementation is correct, should provide much higher gains. The command to run it will be identical to the one above, with a different configuration file.
-  
+
 ### Files you need not modify
 
 * `informed_seq2seq_reader.json`: provides a _reader_ to read the the data
