@@ -23,8 +23,6 @@ There are a few files in this folder:
 
 ### Files you should modify
 
-* `viterbi.py`: General purpose interface to a sequence Viterbi decoder, which currently has an incorrect implementation. Once you have implemented the Viterbi implementation, running `python viterbi_test.py` should result in successful execution without any exceptions.
-
 * `informed_seq2seq.py`: The main model file containing an implementation of the \textbf{naive} sequence to sequence model, simlar to the default sequence decoder in AllenNLP available [here](https://github.com/allenai/allennlp/blob/master/allennlp/models/encoder_decoders/simple_seq2seq.py). 
 We have included additional hooks into the code for supporting the "informed" version, however the implementation of the extra part is mostly incomplete; the additional hooks exist to support the extra column in the data, the extra fields in the configuration, etc. This is the only Python file you need to change.
 * `naive_{java,python}.json`: The configuration files for training and running the naive sequence to sequence model, on respective language.
