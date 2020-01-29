@@ -51,7 +51,7 @@ class Sampler:
         for w in self.lm.vocab():
             if not incl_eos and w == "END_OF_SENTENCE":
                 continue
-            lp = self.lm.cond_logprob(w, prev)
+            lp = self.lm.cond_logprob(w, prev, 0)
             wps.append([w, lp/self.temp])
             tot = np.logaddexp2(lp/self.temp, tot)
         p = self.rnd.random()
@@ -73,6 +73,6 @@ if __name__ == "__main__":
     unigram.fit_corpus(corpus)
     print(unigram.model)
     sampler = Sampler(unigram)
-    for i in xrange(10):
+    for i in range(10):
         print(i, ":", " ".join(str(x) for x in sampler.sample_sentence([])))
 

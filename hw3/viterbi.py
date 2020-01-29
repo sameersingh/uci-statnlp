@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def run_viterbi(emission_scores, trans_scores, start_scores, end_scores):
     """Run the Viterbi algorithm.
 
@@ -24,7 +25,7 @@ def run_viterbi(emission_scores, trans_scores, start_scores, end_scores):
     N = emission_scores.shape[0]
 
     y = []
-    for i in xrange(N):
+    for i in range(N):
         # stupid sequence
         y.append(i % L)
     # score set to 0

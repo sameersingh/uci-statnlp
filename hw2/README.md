@@ -6,7 +6,7 @@ You will need to download `corpora.tar.gz` file from the course website, and put
  python data.py
  ```
 
-The current assignment description is available [here](http://sameersingh.org/courses/statnlp/wi17/assignments.html#hw2).
+The current assignment description is available [here](https://canvas.eee.uci.edu/courses/22668/assignments/414255).
 
 ## Files
 

@@ -1,23 +1,36 @@
 # HW3: Sequence Tagging on Tweets
 
-You will need to download `data.tar.gz` file from the course website, and *uncompress* it into the `data` folder inside `hw3` (if you put it elsewhere, change the location in the code). You should be then able to run:
+You will need to download `data.tar.gz` file from the course website, and *uncompress* it into the `data` folder inside `hw3` (if you put it elsewhere, change the location in the code). Once you activate `allennlp` (e.g., `conda activate allennlp`), you should be then able to run:
 
- ```
- python data.py
- ```
+```
+allennlp train [JSON file path] -s [save point file path] --include-package neural_crf
+```
 
-The current assignment description is available [here](http://sameersingh.org/courses/statnlp/wi17/assignments.html#hw3).
+E.g., `simple_tagger` model for POS
+```
+allennlp train ./config/simple_tagger_pos.json -s ./model/simple_tagger.pt
+```
+E.g., `neural_crf` model for POS
+```
+allennlp train ./config/neural_crf.json -s ./model/neural_crf_pos.pt --include-package neural_crf
+```
+
+The current assignment description is available [here](https://canvas.eee.uci.edu/courses/14385/assignments/270636).
 
 ## Files
 
-There are quite a few files in this folder:
+There are a few files in this folder:
 
-* `tagger.py`: Code for two sequence taggers, logistic regression and CRF. Both of these taggers rely on `feats.py` and `feat_gen.py` to compute the features for each token. The CRF tagger also relies on `viterbi.py` to decode (which is currently incorrect), and on `struct_perceptron.py` for the training algorithm (which also needs Viterbi to be working).
+### Files you should modify
 
-* `feats.py` (and `feat_gen.py`): Code to compute, index, and maintain the token features. The primary purpose of `feats.py` is to map the boolean features computed in `feats_gen.py` to integers, and do the reverse mapping (if you want to know the name of a feature from its index). `feats_gen.py` is used to compute the features of a token in a sentence, which you will be extending. The method there returns the computed features for a token as a list of string (so does not have to worry about indices, etc.).
+* `viterbi.py`: General purpose interface to a sequence Viterbi decoder, which currently has an incorrect implementation. Once you have implemented the Viterbi implementation, running `python viterbi_test.py` should result in successful execution without any exceptions.
 
-* `struct_perceptron.py`: A direct port (with negligible changes) of the structured perceptron trainer from the `pystruct` project. Only used for the CRF tagger. The description of the various hyperparameters of the trainer are available here, but you should change them from the constructor in `tagger.py`.
+* `config/simple_tagger_{pos,ner}.json`: Configuration file for `simple_tagger` model for POS and NER.
 
-* `viterbi.py` (and `viterbi_test.py`): General purpose interface to a sequence Viterbi decoder in `viterbi.py`, which currently has an incorrect implementation. Once you have implemented the Viterbi implementation, running `python viterbi_test.py` should result in succesful execution without any exceptions.
+* `config/neural_crf_{pos,ner}.json`: Configuration file for `neural_crf` model for POS and NER.
 
-* `data.py`: The primary entry point that reads the data, and trains and evaluates the tagger implementation.
+### Files you need not modify
+
+* `neural_crf.py`: Neural CRF implementation working with `viterbi.py`.
+
+* `viterbi_test.py`: Code to test your implementation of Viterbi algorithm.
