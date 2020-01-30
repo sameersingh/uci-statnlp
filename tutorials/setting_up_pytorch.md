@@ -51,7 +51,7 @@ The installation files and instructions are available at:  https://developer.nvi
 Anaconda is a package and environment manager for Python designed to facilitate doing data science and machine learning.
 Installing Anaconda installs a copy of Python which is pre-configured with a lot of useful libraries (like Jupyter, NumPy, Scikit-Learn).
 In addition, Anaconda also makes it really easy to install PyTorch using its package manager.
-Unlike pip (the default pacakge manager for Python) Anaconda's package manager also takes care of installing external dependencies such as CUDA and CuDNN (at least on Linux and Windows) which are required for GPU computing (and can be tricky to manually install).
+Unlike pip (the default package manager for Python) Anaconda's package manager also takes care of installing external dependencies such as CUDA and CuDNN (at least on Linux and Windows) which are required for GPU computing (and can be tricky to manually install).
 
 
 *FAQ: What is a virtual environment?*
