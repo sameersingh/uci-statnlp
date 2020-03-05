@@ -84,7 +84,7 @@
       "type": "adam",
       "lr": 0.001
     },
-    "num_epochs": 50,
+    "num_epochs": 100,
     "validation_metric": "+BLEU",
     "cuda_device": -1
   }
