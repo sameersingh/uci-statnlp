@@ -17,7 +17,7 @@ of the interface.
 
 * `generator.py`: This file contains a simple word and sentence sampler for any language model. Since it supports arbitarily complex language models, it is not very efficient. If this sampler is incredibly slow for your language model, you can consider implementing your own (by caching the conditional probability tables, for example, instead of computing it for every word).
 
-* `data.py`: The primary file to run. This file contains methods to read the appropriate data files from the archive, train and evaluate all the unigram language models (by calling `lm.py`), and generate sample sentences from all the models (by calling `generator.py`). It also saves the result tables into LaTeX files.
+* `data.py`: The primary file to run. This file contains methods to read the appropriate data files from the archive, train and evaluate all the unigram language models (by calling `lm.py`), and generate sample sentences from all the models (by calling `generator.py`). It  saves the result tables into LaTeX files and writes out the trained langauge models into `saved_lms.pkl`.
 
 ## Tabulate
 

@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import numpy as np
+import pickle
 import sys
 
 
@@ -115,9 +116,8 @@ def learn_unigram(data):
     print("test :", unigram.perplexity(data.test))
     from generator import Sampler
     sampler = Sampler(unigram)
-    print("sample: ", " ".join(str(x) for x in sampler.sample_sentence([])))
-    print("sample: ", " ".join(str(x) for x in sampler.sample_sentence([])))
-    print("sample: ", " ".join(str(x) for x in sampler.sample_sentence([])))
+    for _ in range(2):
+        print("sample: ", " ".join(str(x) for x in sampler.sample_sentence([], max_length=20)))
     return unigram
 
 def print_table(table, row_names, col_names, latex_file = None):
@@ -128,7 +128,7 @@ def print_table(table, row_names, col_names, latex_file = None):
     """
     try:
         from tabulate import tabulate
-        rows = [*map(lambda rt: [rt[0]] + rt[1], zip(row_names,table.tolist()))]
+        rows = list(map(lambda rt: [rt[0]] + rt[1], zip(row_names, table.tolist())))
         print(tabulate(rows, headers = [""] + col_names))
         if latex_file is not None:
             latex_str = tabulate(rows, headers = [""] + col_names, tablefmt="latex")
@@ -141,10 +141,15 @@ def print_table(table, row_names, col_names, latex_file = None):
         for row_name, row in zip(row_names, table):
             print(row_format.format(row_name, *row))
 
+def save_lms(dnames, models):
+    models = {name: model for name, model in zip(dnames, models)}
+    with open('saved_lms.pkl', 'wb') as f:
+        pickle.dump(models, f)
+
+
 if __name__ == "__main__":
     # Do no run, the following function was used to generate the splits
     # file_splitter("data/reuters.txt")
-
     dnames = ["brown", "reuters", "gutenberg"]
     datas = []
     models = []
@@ -176,4 +181,6 @@ if __name__ == "__main__":
     print("-------------------------------")
     print("x test")
     print_table(perp_test, dnames, dnames, "table-test.tex")
-
+    print("-------------------------------")
+    print("saving language models to file")
+    save_lms(dnames, models)
