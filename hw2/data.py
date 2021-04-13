@@ -4,7 +4,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+import argparse
 import numpy as np
+import os
 import pickle
 import sys
 
@@ -141,13 +143,24 @@ def print_table(table, row_names, col_names, latex_file = None):
         for row_name, row in zip(row_names, table):
             print(row_format.format(row_name, *row))
 
-def save_lms(dnames, models):
-    models = {name: model for name, model in zip(dnames, models)}
-    with open('saved_lms.pkl', 'wb') as f:
-        pickle.dump(models, f)
+def save_lms(dnames, models, output_dir):
+    # write out LMs trained on different datasets in individual files
+    for name, model in zip(dnames, models):
+        with open(os.path.join(output_dir, f'{name}.pkl'), 'wb') as f:
+            pickle.dump(model, f)
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output_dir', type=str, required=True,
+                        help='name of directory to write out trained language models. '
+                             'If it exists, the previous contents will be overwritten.')
+    args = parser.parse_args()
+
+    output_dir = args.output_dir
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
     # Do no run, the following function was used to generate the splits
     # file_splitter("data/reuters.txt")
     dnames = ["brown", "reuters", "gutenberg"]
@@ -174,13 +187,13 @@ if __name__ == "__main__":
 
     print("-------------------------------")
     print("x train")
-    print_table(perp_train, dnames, dnames, "table-train.tex")
+    print_table(perp_train, dnames, dnames, os.path.join(output_dir, "table-train.tex"))
     print("-------------------------------")
     print("x dev")
-    print_table(perp_dev, dnames, dnames, "table-dev.tex")
+    print_table(perp_dev, dnames, dnames, os.path.join(output_dir, "table-dev.tex"))
     print("-------------------------------")
     print("x test")
-    print_table(perp_test, dnames, dnames, "table-test.tex")
+    print_table(perp_test, dnames, dnames, os.path.join(output_dir, "table-test.tex"))
     print("-------------------------------")
     print("saving language models to file")
-    save_lms(dnames, models)
+    save_lms(dnames, models, output_dir)
