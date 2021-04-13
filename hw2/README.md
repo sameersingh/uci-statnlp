@@ -13,7 +13,7 @@ The current assignment description is available [here](https://canvas.eee.uci.ed
 There are only four files in this folder:
 
 * `lm.py`: This file describes the higher level interface for a language model, and contains functions to train, query, and evaluate it. An implementation of a simple back-off based unigram model is also included, that implements all of the functions
-of the interface.
+of the interface. Your job will be to implement an ngram language model for any arbitrary size ngram.
 
 * `generator.py`: This file contains a simple word and sentence sampler for any language model. Since it supports arbitarily complex language models, it is not very efficient. If this sampler is incredibly slow for your language model, you can consider implementing your own (by caching the conditional probability tables, for example, instead of computing it for every word).
 

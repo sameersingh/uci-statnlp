@@ -2,7 +2,7 @@ import pickle
 import streamlit as st
 
 from generator import Sampler
-from lm import LangModel, Unigram
+from lm import LangModel, Unigram, Ngram
 
 
 def load_lms():
@@ -11,38 +11,42 @@ def load_lms():
     return lm_dict
 
 
-def main():
-    st.set_page_config(layout="wide")
-    lm_dict = load_lms()
-    key = st.sidebar.selectbox("Pick language model to use:", list(lm_dict.keys()))
-    lm = lm_dict[key]
-    left_col, right_col = st.beta_columns(2)
-
-    # code for language model generation
-    left_col.subheader("Language Model Generation")
-    sampler = Sampler(lm)
-    prefix = left_col.text_input("Enter a prefix if you want")
-    max_length = left_col.slider("Maximum length of generated sentences", 10, 50)
-    num_samples = left_col.slider("Number of sentences to generate", 1, 10)
+def generate(lm):
+    st.subheader("Language Model Generation")
+    prefix = st.text_input("Enter a prefix (default: no prefix)")
+    temp = st.number_input("Enter a temperature", value=1.0)
+    max_length = st.slider("Maximum length of generated sentences", 10, 50)
+    num_samples = st.slider("Number of sentences to generate", 1, 10)
+    sampler = Sampler(lm, temp)
     if st.button("Generate"):
         for i in range(num_samples):
             generated_text = " ".join(sampler.sample_sentence(prefix.split(), max_length))
-            left_col.write(f"{i}) {generated_text}\n")
+            st.write(f"{i}) {generated_text}\n")
 
-    # code for language model scoring
-    right_col.subheader("Language Model Scoring")
-    text = right_col.text_input("Enter a piece of text to score")
-    if right_col.button("Score"):
+
+def score(lm):
+    st.subheader("Language Model Scoring")
+    text = st.text_input("Enter a piece of text to score")
+    if st.button("Score"):
         if text == "":
-            right_col.write("Please entire a piece of text")
+            st.write("Please entire a piece of text")
         else:
             text = text.split()
             numOOV = lm.get_num_oov([text])
             logprob_score = lm.logprob_sentence(text, numOOV)
-            norm_logprob_score = logprob_score/len(text)
-            right_col.write(f"Number of OOV tokens: {numOOV}")
-            right_col.write(f"Log probability score: {logprob_score:.2f}")
-            right_col.write(f"Normalized log probability score: {norm_logprob_score:.2f}")
+            perplexity = lm.perplexity([text])
+            st.write(f"Number of OOV tokens: {numOOV}")
+            st.write(f"Log probability: {logprob_score:.2f}")
+            st.write(f"Perplexity: {perplexity:.2f}")
+
+
+def main():
+    lm_dict = load_lms()
+    key = st.sidebar.selectbox("Pick language model to use:", list(lm_dict.keys()))
+    lm = lm_dict[key]
+
+    generate(lm)
+    score(lm)
 
 
 if __name__ == "__main__":

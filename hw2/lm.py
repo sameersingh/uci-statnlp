@@ -4,7 +4,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-import collections
 import itertools
 from math import log
 import sys
@@ -98,3 +97,18 @@ class Unigram(LangModel):
 
     def vocab(self):
         return self.model.keys()
+
+class Ngram(LangModel):
+    def __init__(self, ngram_size): pass
+
+    # required, update the model when a sentence is observed
+    def fit_sentence(self, sentence): pass
+
+    # optional, if there are any post-training steps (such as normalizing probabilities)
+    def norm(self): pass
+
+    # required, return the log2 of the conditional prob of word, given previous words
+    def cond_logprob(self, word, previous, numOOV): pass
+
+    # required, the list of words the language model suports (including EOS)
+    def vocab(self): pass
