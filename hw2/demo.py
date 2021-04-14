@@ -15,8 +15,10 @@ def load_lm():
     # get list of all `.pkl` files in directory and pick one
     pkl_files = sorted(glob.glob(os.path.join(save_dir, '*.pkl')))
     pkl_file = st.sidebar.selectbox("Pick which LM to load", pkl_files)
+    st.sidebar.write(f"Loading LM from `{pkl_file}`")
     with open(pkl_file, "rb") as file:
         lm = pickle.load(file)
+
 
     return lm
 
