@@ -4,7 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-import collections
+import itertools
 from math import log
 import sys
 
@@ -31,10 +31,14 @@ class LangModel:
 
         Assumes the model uses an EOS symbol at the end of each sentence.
         """
-        vocab_set = set(self.vocab())
-        words_set  = set([w for s in corpus for w in s])
-        numOOV = len(words_set - vocab_set)
+        numOOV = self.get_num_oov(corpus)
         return pow(2.0, self.entropy(corpus, numOOV))
+
+    def get_num_oov(self, corpus):
+        vocab_set = set(self.vocab())
+        words_set = set(itertools.chain(*corpus))
+        numOOV = len(words_set - vocab_set)
+        return numOOV
 
     def entropy(self, corpus, numOOV):
         num_words = 0.0
@@ -93,3 +97,18 @@ class Unigram(LangModel):
 
     def vocab(self):
         return self.model.keys()
+
+class Ngram(LangModel):
+    def __init__(self, ngram_size): pass
+
+    # required, update the model when a sentence is observed
+    def fit_sentence(self, sentence): pass
+
+    # optional, if there are any post-training steps (such as normalizing probabilities)
+    def norm(self): pass
+
+    # required, return the log2 of the conditional prob of word, given previous words
+    def cond_logprob(self, word, previous, numOOV): pass
+
+    # required, the list of words the language model suports (including EOS)
+    def vocab(self): pass

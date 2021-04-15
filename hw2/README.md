@@ -10,14 +10,16 @@ The current assignment description is available [here](https://canvas.eee.uci.ed
 
 ## Files
 
-There are only three files in this folder:
+There are only four files in this folder:
 
 * `lm.py`: This file describes the higher level interface for a language model, and contains functions to train, query, and evaluate it. An implementation of a simple back-off based unigram model is also included, that implements all of the functions
-of the interface.
+of the interface. Your job will be to implement an ngram language model for any arbitrary size ngram.
 
 * `generator.py`: This file contains a simple word and sentence sampler for any language model. Since it supports arbitarily complex language models, it is not very efficient. If this sampler is incredibly slow for your language model, you can consider implementing your own (by caching the conditional probability tables, for example, instead of computing it for every word).
 
-* `data.py`: The primary file to run. This file contains methods to read the appropriate data files from the archive, train and evaluate all the unigram language models (by calling `lm.py`), and generate sample sentences from all the models (by calling `generator.py`). It also saves the result tables into LaTeX files.
+* `data.py`: The primary file to run. This file contains methods to read the appropriate data files from the archive, train and evaluate all the unigram language models (by calling `lm.py`), and generate sample sentences from all the models (by calling `generator.py`). It  saves the result tables into LaTeX files and writes out the trained language models. Use the `--output_dir` flag to specify a directory to write out these files. For example, running `python data.py --output_dir unigram` writes out the files into `unigram/`.
+
+* `demo.py`: This file contains the code to launch an interactive Streamlit demo with your trained language models. You will use this demo to sample text from your language model as well as to score text that you provide as input. To launch the demo, run `streamlit run demo.py`, then in your browser go to http://localhost:8501.
 
 ## Tabulate
 
