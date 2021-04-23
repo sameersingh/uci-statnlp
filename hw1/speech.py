@@ -1,4 +1,7 @@
-#!/bin/python
+import matplotlib.pyplot
+
+
+class Data: pass
 
 def read_files(tarfname):
 	"""Read the training and development data from the speech tar file.
@@ -17,20 +20,53 @@ def read_files(tarfname):
 	trainy,devy: array of int labels, one for each document
 	"""
 	import tarfile
+	# from spacy.lang.en import English
+	# nlp = English()
 	tar = tarfile.open(tarfname, "r:gz")
-	class Data: pass
 	speech = Data()
 	print("-- train data")
 	speech.train_data, speech.train_fnames, speech.train_labels = read_tsv(tar, "train.tsv")
-	print(len(speech.train_data))
+
+	# print("printing train data")
+	# print(speech.train_data)
+	# print("printing type of train data")
+	# print(type(speech.train_data))
+	# from nltk.stem import WordNetLemmatizer
+	# import nltk
+	# wordnet_lemmatizer = WordNetLemmatizer()
+	# speech_train_lemma = []
+	# for i in range(len(speech.train_data)):
+	# 	tokenization = nltk.word_tokenize(str(speech.train_data[i]))
+	# 	temp = []
+	# 	for w in enumerate(tokenization):
+	# 		temp.append(wordnet_lemmatizer.lemmatize(w[1]))
+	# 	strings = str(temp)
+	# 	str1 = ""
+	# 	speech_train_lemma.append(str1.join(strings))
+
 	print("-- dev data")
 	speech.dev_data, speech.dev_fnames, speech.dev_labels = read_tsv(tar, "dev.tsv")
 	print(len(speech.dev_data))
 	print("-- transforming data and labels")
-	from sklearn.feature_extraction.text import CountVectorizer
+
+	from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+	from scipy.sparse import vstack
+
 	speech.count_vect = CountVectorizer()
 	speech.trainX = speech.count_vect.fit_transform(speech.train_data)
+
+	# tfidf_transformer = TfidfTransformer(smooth_idf=True, use_idf=True)
+	# speech.trainX = tfidf_transformer.fit_transform(speech.trainX)
+
+	#speech.trainX = vstack(speech.trainX1, speech.trainX2)
+
+	# print("trainX2 1st item")
+	# print(speech.trainX2[1])
+	# print("trainX2 type")
+	# print(type(speech.trainX2))
 	speech.devX = speech.count_vect.transform(speech.dev_data)
+	# tfidf_transformer_dev = TfidfTransformer(smooth_idf=True, use_idf=True)
+	# speech.devX = tfidf_transformer_dev.fit_transform(speech.devX)
 	from sklearn import preprocessing
 	speech.le = preprocessing.LabelEncoder()
 	speech.le.fit(speech.train_labels)
@@ -51,7 +87,6 @@ def read_unlabeled(tarfname, speech):
 	"""
 	import tarfile
 	tar = tarfile.open(tarfname, "r:gz")
-	class Data: pass
 	unlabeled = Data()
 	unlabeled.data = []
 	unlabeled.fnames = []
@@ -158,20 +193,69 @@ def read_instance(tar, ifname):
 if __name__ == "__main__":
 	print("Reading data")
 	tarfname = "data/speech.tar.gz"
-	speech = read_files(tarfname)
-	print("Training classifier")
-	import classify
-	cls = classify.train_classifier(speech.trainX, speech.trainy)
-	print("Evaluating")
-	classify.evaluate(speech.trainX, speech.trainy, cls)
-	classify.evaluate(speech.devX, speech.devy, cls)
+	#speech = read_files(tarfname)
+	import pickle
+	#pickle.dump(speech, open('speech_pickle', 'wb'))
+	print("loading speech pickle")
+	speech = pickle.load(open('speech_pickle', 'rb'))
+
+	import self_training
+	#self_training(speech.trainX, speech.trainy, speech.devX, speech.devy)
+
+	# print(speech.trainX)
+	#
+	# print("Training classifier")
+	# import classify
+	# cls = classify.train_classifier(speech.trainX, speech.trainy)
+	# print("Evaluating")
+	# classify.evaluate(speech.trainX, speech.trainy, cls)
+	# classify.evaluate(speech.devX, speech.devy, cls)
 
 	print("Reading unlabeled data")
-	unlabeled = read_unlabeled(tarfname, speech)
-	print("Writing pred file")
-	write_pred_kaggle_file(unlabeled, cls, "data/speech-pred.csv", speech)
+	#unlabeled = read_unlabeled(tarfname, speech)
+	#pickle.dump(unlabeled, open('unlabeled_pickle', 'wb'))
+
+	print("loading unlabeled pickle")
+	unlabeled = pickle.load(open('unlabeled_pickle', 'rb'))
+	# print("Unlabeled X")
+	# print(unlabeled.X)
+	# print("Unlabeled Data")
+	# print(unlabeled.data)
+	# print("Unlabeled Fnames")
+	# print(unlabeled.fnames)
+
+	#Semi Supervised portion
+	from sklearn.linear_model import LogisticRegression
+	import matplotlib.pyplot as plt
+	import scipy.sparse
+	import pandas as pd
+	from scipy.sparse import hstack
+
+	# speech.trainX = pd.DataFrame.sparse.from_spmatrix(speech.trainX)
+	# speech.trainy = pd.DataFrame.sparse.from_spmatrix(speech.trainy)
+	# unlabeled.X = pd.DataFrame.sparse.from_spmatrix(unlabeled.X)
+	# cls = LogisticRegression(max_iter=1000)
+	# cls.fit(speech.trainX,speech.trainy)
+
+	# preds_probs = cls.predict_proba(speech.devX)
+	# plt.hist(preds_probs)
+	# plt.title("Prediction Probability on Development Data (19 unique classes)")
+	# plt.xlabel("Probability of Correct Prediction")
+	# plt.ylabel("Counts")
+	# plt.show()
+	# plt.savefig("pred_prob")
+
+	preds_probs = cls.predict_proba(unlabeled.X)
+	print("preds probs")
+	print(preds_probs)
+
+
+	#print("Writing pred file")
+	#write_pred_kaggle_file(unlabeled, cls, "data/speech-pred.csv", speech)
+
+
 
 	# You can't run this since you do not have the true labels
-	# print "Writing gold file"
-	# write_gold_kaggle_file("data/speech-unlabeled.tsv", "data/speech-gold.csv")
-	# write_basic_kaggle_file("data/speech-unlabeled.tsv", "data/speech-basic.csv")
+	#print "Writing gold file"
+	#write_gold_kaggle_file("data/speech-unlabeled.tsv", "data/speech-gold.csv")
+	#write_basic_kaggle_file("data/speech-unlabeled.tsv", "data/speech-basic.csv")
