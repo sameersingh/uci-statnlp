@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from dataset import Vocabulary
 from metric import Accuracy, AccuracyPerLabel, Average
-from util import load_embeddings, load_torch_object
+from util import load_embeddings, load_object_from_dict
 
 
 class SimpleTagger(nn.Module):
@@ -19,8 +19,8 @@ class SimpleTagger(nn.Module):
         super(SimpleTagger, self).__init__()
         # in addition to loading embeddings, update the vocabulary word list
         self._embeddings = load_embeddings(**embeddings, token_vocab=token_vocab)
-        self._encoder = load_torch_object(encoder)
-        self._tag_projection = load_torch_object(tag_projection)
+        self._encoder = load_object_from_dict(encoder)
+        self._tag_projection = load_object_from_dict(tag_projection)
 
         self.token_vocab = token_vocab
         self.tag_vocab = tag_vocab

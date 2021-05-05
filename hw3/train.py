@@ -12,8 +12,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from dataset import TwitterDataset, Vocabulary
-from util import load_torch_object
-from simple_tagger import SimpleTagger
+from util import load_object_from_dict
 
 
 def load_datasets(train_dataset_params: dict, validation_dataset_params: dict):
@@ -56,7 +55,7 @@ def train(
         # compute validation metrics
         model.eval()
         for batch in validation_dataloader:
-            _ = model(**batch)
+            model(**batch)
         cur_epoch_metrics.update(model.get_metrics(header='validation_'))
 
         # write the current epochs statistics to file
@@ -71,7 +70,7 @@ def train(
             best_model = copy.deepcopy(model)
             best_metrics = copy.deepcopy(cur_epoch_metrics)
 
-    # write the best validation metrics we got and best model
+    # write the best metrics we got and best model
     with open(f'{serialization_dir}/best_metrics.json', 'w') as f:
         best_metrics['run_time'] = str(datetime.timedelta(seconds=time.time()-start))
         print(f"Best Performing Model {json.dumps(best_metrics, indent=4)}")
@@ -108,14 +107,13 @@ def main():
     validation_dataloader = DataLoader(validation_dataset, batch_size)
 
     # load model
-    if config['model'].pop('type') == 'simple-tagger':
-        model = SimpleTagger(**config['model'],
-                             token_vocab=train_dataset.token_vocab,
-                             tag_vocab=train_dataset.tag_vocab)
+    model = load_object_from_dict(config['model'],
+                                  token_vocab=train_dataset.token_vocab,
+                                  tag_vocab=train_dataset.tag_vocab)
 
     # load optimizer
-    config['training']['optimizer']['params'] = model.parameters()
-    optimizer = load_torch_object(config['training']['optimizer'])
+    optimizer = load_object_from_dict(config['training']['optimizer'],
+                                      params=model.parameters())
 
     train(
         model=model,

@@ -9,7 +9,7 @@
     "max_length": 30
   },
   "model": {
-    "type": "simple-tagger",
+    "type": "simple_tagger.SimpleTagger",
     "num_tags": 12,
     "embeddings": {
       "embedding_dim": 50
