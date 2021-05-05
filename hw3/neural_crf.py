@@ -208,7 +208,6 @@ class ConditionalRandomField(torch.nn.Module):
 class NeuralCrf(torch.nn.Module):
     def __init__(
         self,
-        num_tags: int,
         token_vocab: Vocabulary,
         tag_vocab: Vocabulary,
         embeddings: Dict,
@@ -222,7 +221,8 @@ class NeuralCrf(torch.nn.Module):
 
         self.token_vocab = token_vocab
         self.tag_vocab = tag_vocab
-        self.num_tags = num_tags
+        self.num_tags = len(self.tag_vocab)
+        assert self.num_tags == self._tag_projection.out_features
         self.crf = ConditionalRandomField(self.num_tags)
 
         self.metrics = {
@@ -243,12 +243,11 @@ class NeuralCrf(torch.nn.Module):
         # Just get the tags and ignore the score.
         pred_tag_ids = [x for x, y in best_paths]
         seq_len = token_ids.size(-1)
-        pred_tag_ids = [x+[self.num_tags]*(seq_len-len(x)) for x in pred_tag_ids]
+        pred_tag_ids = [x+[self.tag_vocab.pad_token_id]*(seq_len-len(x))
+                        for x in pred_tag_ids]
         pred_tag_ids = torch.Tensor(pred_tag_ids)
 
-        output_dict = {
-            'pred_tag_ids': pred_tag_ids
-        }
+        output_dict = {'pred_tag_ids': pred_tag_ids}
         if tag_ids is not None:
             loss = -1*self.crf(tag_logits, tag_ids, mask)
             output_dict["loss"] = loss

@@ -23,7 +23,6 @@ class SimpleTagger(torch.nn.Module):
         self.token_vocab = token_vocab
         self.tag_vocab = tag_vocab
         self.num_tags = len(self.tag_vocab)
-
         assert self.num_tags == self._tag_projection.out_features
 
         self.loss = torch.nn.CrossEntropyLoss(ignore_index=self.tag_vocab.pad_token_id)

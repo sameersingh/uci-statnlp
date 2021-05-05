@@ -10,18 +10,11 @@
   },
   "model": {
     "type": "neural_crf.NeuralCrf",
-    "num_tags": 13,
     "embeddings": {
-      "embedding_dim": 50,
-      "embedding_path": "glove.6b.50d.txt"
+      "embedding_dim": 50
     },
     "encoder": {
-      "type": "torch.nn.LSTM",
-      "input_size": 50,
-      "hidden_size": 25,
-      "num_layers": 1,
-      "dropout": 0.1,
-      "bidirectional": true
+      "type": null
     },
     "tag_projection": {
       "type": "torch.nn.Linear",
