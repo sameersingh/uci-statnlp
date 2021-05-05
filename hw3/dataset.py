@@ -86,7 +86,11 @@ class TwitterDataset(Dataset):
                               max_length=self._max_length)
 
     def _load_dataset(self, dataset_file):
+        # Hacky way to distinguish between POS and NER tasks.
+        # We look for the word 'ner' or 'pos' in the data file, then
+        # use it to determine which column contains the labels
         task = dataset_file.split('.')[-1]
+        assert task == 'pos' or task == 'ner'
         label_column = 1 if task == 'pos' else 3
 
         # read the dataset file, extracting tokens and tags
@@ -94,7 +98,7 @@ class TwitterDataset(Dataset):
             tokens, tags = [], []
             for line in f:
                 elements = line.strip().split('\t')
-                # empty line
+                # empty line means end of sentence
                 if elements == [""]:
                     self._dataset.append({'tokens': tokens, 'tags': tags})
                     tokens, tags = [], []
