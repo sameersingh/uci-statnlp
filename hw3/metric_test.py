@@ -25,6 +25,7 @@ def run_metric_test():
     gold_scores = {0: 0.25, 1: 0.5, 2: 0.5, 3: 0.0, 4: 0.5}
     print(f'Your metric scores {your_scores}')
     print(f'Gold metric scores {gold_scores}')
+    assert gold_scores == your_scores
 
 
 if __name__ == "__main__":

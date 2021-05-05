@@ -47,7 +47,7 @@ def train(
     for epoch_num in range(num_epochs):
         # training
         model.train()
-        for batch in tqdm(train_dataloader, f'Epoch {epoch_num+1}/{num_epochs}'):
+        for batch in tqdm(train_dataloader, f'Epoch {epoch_num}'):
             optimizer.zero_grad()
             output_dict = model(**batch)
             output_dict['loss'].backward()
