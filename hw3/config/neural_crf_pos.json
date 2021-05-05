@@ -9,12 +9,19 @@
     "max_length": 30
   },
   "model": {
-    "type": "simple_tagger.SimpleTagger",
+    "type": "neural_crf.NeuralCrf",
+    "num_tags": 13,
     "embeddings": {
-      "embedding_dim": 50
+      "embedding_dim": 50,
+      "embedding_path": "glove.6b.50d.txt"
     },
     "encoder": {
-      "type": null
+      "type": "torch.nn.LSTM",
+      "input_size": 50,
+      "hidden_size": 25,
+      "num_layers": 1,
+      "dropout": 0.1,
+      "bidirectional": true
     },
     "tag_projection": {
       "type": "torch.nn.Linear",

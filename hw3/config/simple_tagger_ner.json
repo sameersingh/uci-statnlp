@@ -10,7 +10,6 @@
   },
   "model": {
     "type": "simple_tagger.SimpleTagger",
-    "num_tags": 21,
     "embeddings": {
       "embedding_dim": 50
     },
@@ -20,7 +19,7 @@
     "tag_projection": {
       "type": "torch.nn.Linear",
       "in_features": 50,
-      "out_features": 21
+      "out_features": 22
     }
   },
   "training": {

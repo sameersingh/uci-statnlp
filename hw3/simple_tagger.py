@@ -1,15 +1,14 @@
 from typing import Dict
 import torch
-import torch.nn as nn
 
 from dataset import Vocabulary
 from metric import Accuracy, AccuracyPerLabel, Average
 from util import load_embeddings, load_object_from_dict
 
 
-class SimpleTagger(nn.Module):
-    def __init__(self,
-        num_tags: int,
+class SimpleTagger(torch.nn.Module):
+    def __init__(
+        self,
         token_vocab: Vocabulary,
         tag_vocab: Vocabulary,
         embeddings: Dict,
@@ -17,15 +16,17 @@ class SimpleTagger(nn.Module):
         tag_projection: Dict
     ):
         super(SimpleTagger, self).__init__()
-        # in addition to loading embeddings, update the vocabulary word list
         self._embeddings = load_embeddings(**embeddings, token_vocab=token_vocab)
         self._encoder = load_object_from_dict(encoder)
         self._tag_projection = load_object_from_dict(tag_projection)
 
         self.token_vocab = token_vocab
         self.tag_vocab = tag_vocab
-        self.num_tags = num_tags
-        self.loss = nn.CrossEntropyLoss(ignore_index=num_tags) # ignore pad
+        self.num_tags = len(self.tag_vocab)
+
+        assert self.num_tags == self._tag_projection.out_features
+
+        self.loss = torch.nn.CrossEntropyLoss(ignore_index=self.tag_vocab.pad_token_id)
         self.metrics = {
             'accuracy': Accuracy(),
             'accuracy_per_label': AccuracyPerLabel(self.num_tags, self.tag_vocab),
@@ -33,6 +34,7 @@ class SimpleTagger(nn.Module):
         }
 
     def forward(self, token_ids, tag_ids=None) -> Dict:
+        mask = token_ids != self.token_vocab.pad_token_id
         embeddings = self._embeddings(token_ids).permute(1, 0, 2)
         encoder_outputs = self._encoder(embeddings)[0] if self._encoder else embeddings
         encoder_outputs = encoder_outputs.permute(1, 0, 2)
@@ -42,14 +44,11 @@ class SimpleTagger(nn.Module):
         output_dict = {
             'pred_tag_ids': pred_tag_ids,
             'tag_logits': tag_logits,
-            'tag_probs': nn.functional.softmax(tag_logits, dim=-1)
+            'tag_probs': torch.nn.functional.softmax(tag_logits, dim=-1)
         }
         if tag_ids is not None:
             loss = self.loss(tag_logits.view(-1, self.num_tags), tag_ids.view(-1))
             output_dict['loss'] = loss
-
-            # compute accuracy on non-pad tokens
-            mask = tag_ids != self.num_tags
             self.metrics['accuracy'](pred_tag_ids, tag_ids, mask)
             self.metrics['accuracy_per_label'](pred_tag_ids, tag_ids, mask)
             self.metrics['loss'](loss.repeat(token_ids.size(0)))

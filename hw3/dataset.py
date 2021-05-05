@@ -28,6 +28,10 @@ class Vocabulary():
         return self._special_tokens
 
     @property
+    def pad_token_id(self):
+        return self.map_token_to_id(self._pad_token)
+
+    @property
     def word_list(self):
         return self._word_list
 
