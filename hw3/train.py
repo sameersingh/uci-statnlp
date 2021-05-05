@@ -25,11 +25,11 @@ def load_datasets(train_dataset_params: dict, validation_dataset_params: dict):
     token_vocab = Vocabulary(train_dataset.get_tokens_list(), add_unk_token=True)
     tag_vocab = Vocabulary(train_dataset.get_tags_list())
 
-    # add ``Vocabulary`` objects to datasets for tokens/tags to ID mapping
+    # add `Vocabulary` objects to datasets for tokens/tags to ID mapping
     train_dataset.set_vocab(token_vocab, tag_vocab)
     validation_dataset.set_vocab(token_vocab, tag_vocab)
 
-    return train_dataset, validation_dataset, token_vocab, tag_vocab
+    return train_dataset, validation_dataset
 
 
 def train(
@@ -41,9 +41,8 @@ def train(
     serialization_dir: str
 ):
     start = time.time()
-    best_metrics = {'validation_loss': 9999999}
+    best_metrics = {'validation_loss': 10e10}
     best_model = None
-
     for epoch_num in range(num_epochs):
         # training
         model.train()
@@ -58,8 +57,7 @@ def train(
         model.eval()
         for batch in validation_dataloader:
             _ = model(**batch)
-        validation_metrics = model.get_metrics(header='validation_')
-        cur_epoch_metrics.update(validation_metrics)
+        cur_epoch_metrics.update(model.get_metrics(header='validation_'))
 
         # write the current epochs statistics to file
         with open(f'{serialization_dir}/metrics_epoch_{epoch_num}.json', 'w') as f:
@@ -76,9 +74,8 @@ def train(
     # write the best validation metrics we got and best model
     with open(f'{serialization_dir}/best_metrics.json', 'w') as f:
         best_metrics['run_time'] = str(datetime.timedelta(seconds=time.time()-start))
-        best_metrics = json.dumps(best_metrics, indent=4)
-        print(f"Best Performing Model {best_metrics}")
-        f.write(best_metrics)
+        print(f"Best Performing Model {json.dumps(best_metrics, indent=4)}")
+        f.write(json.dumps(best_metrics, indent=4))
         torch.save(best_model, f'{serialization_dir}/model.pt')
 
 
@@ -90,8 +87,6 @@ def main():
     args = parser.parse_args()
     config = json.load(open(args.config_path))
     serialization_dir = args.serialization_dir
-
-    # set random seeds
     random.seed(config['random_seed'])
     torch.manual_seed(config['random_seed'])
 
@@ -100,11 +95,11 @@ def main():
                  f"serialization directory or erase the existing one.")
     else:
         os.makedirs(serialization_dir)
-        with open(os.path.join(serialization_dir, 'config.json'), 'w') as f:
+        with open(f'{serialization_dir}/config.json', 'w') as f:
             f.write(json.dumps(config, indent=4))
 
     # load PyTorch `Dataset` and `DataLoader` objects
-    train_dataset, validation_dataset, token_vocab, tag_vocab = load_datasets(
+    train_dataset, validation_dataset = load_datasets(
         train_dataset_params=config['train_dataset'],
         validation_dataset_params=config['validation_dataset']
     )
@@ -113,10 +108,10 @@ def main():
     validation_dataloader = DataLoader(validation_dataset, batch_size)
 
     # load model
-    config['model']['token_vocab'] = token_vocab
-    config['model']['tag_vocab'] = tag_vocab
     if config['model'].pop('type') == 'simple-tagger':
-        model = SimpleTagger(**config['model'])
+        model = SimpleTagger(**config['model'],
+                             token_vocab=train_dataset.token_vocab,
+                             tag_vocab=train_dataset.tag_vocab)
 
     # load optimizer
     config['training']['optimizer']['params'] = model.parameters()

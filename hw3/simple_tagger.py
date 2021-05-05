@@ -18,8 +18,7 @@ class SimpleTagger(nn.Module):
     ):
         super(SimpleTagger, self).__init__()
         # in addition to loading embeddings, update the vocabulary word list
-        embeddings['word_list'] = token_vocab.word_list
-        self._embeddings, token_vocab.word_list = load_embeddings(**embeddings)
+        self._embeddings = load_embeddings(**embeddings, token_vocab=token_vocab)
         self._encoder = load_torch_object(encoder)
         self._tag_projection = load_torch_object(tag_projection)
 

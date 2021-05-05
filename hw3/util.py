@@ -1,11 +1,10 @@
-def load_embeddings(embedding_dim, word_list=[], embedding_path=None):
+def load_embeddings(embedding_dim, token_vocab, embedding_path=None):
     import torch
 
     # initialize embeddings randomly
     if embedding_path is None:
-        embeddings = torch.nn.Embedding(len(word_list)+2, embedding_dim)
+        embeddings = torch.nn.Embedding(len(token_vocab), embedding_dim)
     # read in pretrained embeddings
-    # TODO: only load in embeddings of words in our word list
     else:
         word_list = []
         embeddings_list = []
@@ -14,15 +13,18 @@ def load_embeddings(embedding_dim, word_list=[], embedding_path=None):
                 line = line.split()
                 word_list.append(line[0])
                 embeddings_list.append(torch.Tensor(list(map(float, line[1:]))))
-        embeddings_list.append(torch.FloatTensor(embedding_dim).uniform_(-0.1, 0.1)) # <pad>
-        embeddings_list.append(torch.FloatTensor(embedding_dim).uniform_(-0.1, 0.1)) # <unk>
+
+        # create new embeddings for special tokens (e.g. UNK)
+        for _ in range(len(token_vocab.special_tokens)):
+            embeddings_list.append(torch.FloatTensor(embedding_dim).uniform_(-0.1, 0.1))
 
         # init a random Embedding object
         embeddings = torch.nn.Embedding(len(embeddings_list), embedding_dim)
         # set embedding weights to the embeddings we loaded
         embeddings.weight.data.copy_(torch.vstack(embeddings_list))
+        token_vocab.word_list = word_list
 
-    return embeddings, word_list
+    return embeddings
 
 
 def create_object_from_class_string(module_name, class_name, params):
