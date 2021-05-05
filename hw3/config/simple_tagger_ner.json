@@ -1,59 +1,39 @@
 {
-  "dataset_reader": {
-    "type": "conll2003",
-    "tag_label": "ner",
-    "token_indexers": {
-      "tokens": {
-        "type": "single_id",
-        "lowercase_tokens": true
-      },
-      "token_characters": {
-        "type": "characters"
-      }
-    }
+  "random_seed": 42,
+  "train_dataset": {
+    "data_path": "data/twitter_train.ner",
+    "max_length": 30
   },
-  "train_data_path": "./data/twitter_train.ner",
-  "validation_data_path": "./data/twitter_dev.ner",
-  "test_data_path": "./data/twitter_dev.ner",
-  "evaluate_on_test": true,
+  "validation_dataset": {
+    "data_path": "data/twitter_dev.ner",
+    "max_length": 30
+  },
   "model": {
-    "type": "simple_tagger",
-    "text_field_embedder": {
-      "token_embedders": {
-        "tokens": {
-            "type": "embedding",
-            "embedding_dim": 50
-        },
-        "token_characters": {
-            "type": "character_encoding",
-            "embedding": {
-            "embedding_dim": 5
-            },
-            "encoder": {
-            "type": "cnn",
-            "embedding_dim": 5,
-            "num_filters": 50,
-            "ngram_filter_sizes": [
-                5
-            ]
-            },
-            "dropout": 0.2
-        }
-      }
+    "type": "simple-tagger",
+    "num_tags": 21,
+    "embeddings": {
+      "embedding_dim": 50,
+      "embedding_path": "glove.6B.50d.txt"
     },
     "encoder": {
-      "type": "pass_through",
-      "input_dim": 100
+      "type": "torch.nn.LSTM",
+      "input_size": 50,
+      "hidden_size": 25,
+      "num_layers": 1,
+      "dropout": 0.1,
+      "bidirectional": true
+    },
+    "tag_projection": {
+      "type": "torch.nn.Linear",
+      "in_features": 50,
+      "out_features": 21
     }
   },
-  "iterator": {
-    "type": "basic",
-    "batch_size": 32
-  },
-  "trainer": {
-    "optimizer": "adam",
-    "num_epochs": 40,
-    "patience": 10,
-    "cuda_device": -1
+  "training": {
+    "batch_size": 32,
+    "num_epochs": 20,
+    "optimizer": {
+      "type": "torch.optim.Adam"
+    }
   }
 }
