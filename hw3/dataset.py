@@ -67,7 +67,7 @@ class Vocabulary():
         """ Maps a list of token IDs to a list of token """
         tokens = [self.map_id_to_token(id) for id in ids]
         if filter_padding:
-            tokens = [t for t in tokens if t == self._pad_token]
+            tokens = [t for t in tokens if t != self._pad_token]
         return tokens
 
 
