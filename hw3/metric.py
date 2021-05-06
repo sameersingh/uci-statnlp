@@ -40,7 +40,7 @@ class Metric():
 class Average(Metric):
     """ A metric class which a list of scores and returns the average """
     def __init__(self):
-        self.reset()
+        self.scores = []
 
     def __call__(self, scores):
         self.scores += scores
@@ -64,7 +64,10 @@ class Average(Metric):
 class Accuracy(Metric):
     """ A metric class which stores the accuracy of predictions. """
     def __init__(self):
-        self.reset()
+        # keeps a running tab on the number of correct predictions
+        self.correct_count = 0
+        # keeps a running tab on the number of predictions
+        self.total_count = 0
 
     def __call__(self, predictions, gold_labels, mask=None):
         """
@@ -80,18 +83,17 @@ class Accuracy(Metric):
             mask = torch.ones(predictions.size())
 
         # Make the tensors 1 dimensional
-        predictions = predictions.view(-1)
-        gold_labels = gold_labels.view(-1)
-        mask = mask.view(-1)
+        predictions = predictions.view(-1).tolist()
+        gold_labels = gold_labels.view(-1).tolist()
+        mask = mask.view(-1).tolist()
 
-        # all positions where the prediction is correct
-        correct = predictions == gold_labels
-        # use mask to make all masked positions incorrect
-        correct = correct*mask
-
-        self.correct_count += torch.sum(correct)
-        # only count positions that aren't masked
-        self.total_count += torch.sum(mask)
+        for pred, gold, m in zip(predictions, gold_labels, mask):
+            # if the current mask value has a 1
+            if m == 1:
+                self.total_count += 1
+                # if gold label matches predicted label
+                if pred == gold:
+                    self.correct_count += 1
 
     def get_metric(self, reset=False):
         """ Returns the accumulated accuracy. """
@@ -115,27 +117,41 @@ class AccuracyPerLabel(Metric):
     def __init__(self, num_labels, label_vocab=None):
         self.num_labels = num_labels
         self.label_vocab = label_vocab
-        self.reset()
+
+        # keeps a running tab on the number of correct predictions per label
+        self.correct_count = {label_id: 0 for label_id in range(self.num_labels)}
+        # keeps a running tab on the total number of times we see each gold label
+        self.total_count = {label_id: 0 for label_id in range(self.num_labels)}
 
     def __call__(self, predictions, gold_labels, mask=None):
         """
         Parameters
         ----------
         predictions: ``torch.Tensor`` size: [batch_size, seq_len]
+            A tensor of predictions.
         gold_labels: ``torch.Tensor`` size: [batch_size, seq_len]
+            A tensor of the gold labels.
         mask: ``torch.Tensor`` size: [batch_size, seq_len]
+            A tensor of 0's and 1's. Accuracy should only be computed on the
+            positions has a value of 1. If the value is 0, ignore the
+            gold label and predicted label at that position.
         """
         predictions, gold_labels, mask = self.detach_tensors(predictions, gold_labels, mask)
+
+        # If a mask isn't provided, make the mask all ones (i.e. compute
+        # accuracy at all positions)
         if mask is None:
             mask = torch.ones(predictions.size())
 
-        # Make the tensors 1 dimensional
+        # Turn the tensors into a single list for easier computation
         predictions = predictions.view(-1).tolist()
         gold_labels = gold_labels.view(-1).tolist()
         mask = mask.view(-1).tolist()
+        assert len(predictions) == len(gold_labels) == len(mask)
 
         # TODO: Update self.correct_count and self.total_count with counts
-
+        # You should add to the values already stored there.
+        # See the `Accuracy.__call__()` to see an example of this.
 
     def get_metric(self, reset=False):
         # accuracies per label
@@ -157,7 +173,5 @@ class AccuracyPerLabel(Metric):
         return accuracy
 
     def reset(self):
-        # the number of correct predictions per label
         self.correct_count = {label_id: 0 for label_id in range(self.num_labels)}
-        # the total number of times we see each gold label
         self.total_count = {label_id: 0 for label_id in range(self.num_labels)}
