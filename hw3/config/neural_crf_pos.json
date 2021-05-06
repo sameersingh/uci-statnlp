@@ -1,66 +1,33 @@
 {
-  "dataset_reader": {
-    "type": "conll2003",
-    "tag_label": "pos",
-    "token_indexers": {
-      "tokens": {
-        "type": "single_id",
-        "lowercase_tokens": true
-      },
-      "token_characters": {
-        "type": "characters"
-      }
-    }
+  "random_seed": 42,
+  "train_dataset": {
+    "data_path": "data/twitter_train.pos",
+    "max_length": 30
   },
-  "train_data_path": "./data/twitter_train.pos",
-  "validation_data_path": "./data/twitter_dev.pos",
-  "test_data_path": "./data/twitter_dev.pos",
-  "evaluate_on_test": true,
+  "validation_dataset": {
+    "data_path": "data/twitter_dev.pos",
+    "max_length": 30
+  },
   "model": {
-    "type": "neural_crf",
-    "text_field_embedder": {
-      "token_embedders": {
-        "tokens": {
-            "type": "embedding",
-            "embedding_dim": 50
-        },
-        "token_characters": {
-            "type": "character_encoding",
-            "embedding": {
-            "embedding_dim": 25
-            },
-            "encoder": {
-            "type": "rnn",
-            "input_size": 25,
-            "hidden_size": 80,
-            "num_layers": 2,
-            "dropout": 0.25
-            }
-        }
-      }
+    "type": "neural_crf.NeuralCrf",
+    "embeddings": {
+      "embedding_dim": 50
     },
     "encoder": {
-      "type": "pass_through",
-      "input_dim": 130
+      "type": null
     },
-    "regularizer": [
-      [
-        "transitions$",
-        {
-          "type": "l2",
-          "alpha": 0.01
-        }
-      ]
-    ]
+    "tag_projection": {
+      "type": "torch.nn.Linear",
+      "in_features": 50,
+      "out_features": 13
+    }
   },
-  "iterator": {
-    "type": "basic",
-    "batch_size": 32
-  },
-  "trainer": {
-    "optimizer": "adam",
-    "num_epochs": 50,
-    "patience": 10,
-    "cuda_device": -1
+  "training": {
+    "batch_size": 32,
+    "num_epochs": 40,
+    "optimizer": {
+      "type": "torch.optim.Adam",
+      "lr": 0.001
+    }
   }
 }
