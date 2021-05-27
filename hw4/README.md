@@ -1,36 +1,54 @@
-HW4: Generating Function Descriptions
-===
+# HW4: Summarization
 
-The assignment description is available [here](https://canvas.eee.uci.edu/courses/14385/assignments/270638).
-In order to work on this assignment, you will need to download the `hw4-data.tar.gz` file from the course website.
-By default we assume that the contents of this file will be extracted into the `data` folder. You will also need to install AllenNLP.
+You will need to download the `xsum_val_small.jsonl` file from the course website, and place it into the `data` folder inside `hw4` (if you put it elsewhere, change the location in the code). 
+You will need Python3 and the Python packages ``jsonlines``, ``rouge-score``, ``torch``, ``transformers``, and  `tqdm`. 
 
-## Reference Commands
-
-To train a model, you should be able to directly run:
-```
-allennlp train config/naive_{java,python} -s models/naive_{java,python} --include-package informed_seq2seq --include-package informed_seq2seq_reader
-```
-
-To serve a demo after training, you need to run:
-```
-python -m allennlp.service.server_simple --archive-path [MODEL_DIR]/model.tar.gz --predictor informed_seq2seq_predictor --include-package informed_seq2seq --include-package informed_seq2seq_reader --include-package informed_seq2seq_predictor --title "Code to Text" --field-name source --field-name extra
-```
 
 ## Files
 
 There are a few files in this folder:
 
-### Files you should modify
+#### Files you should modify
 
-* `informed_seq2seq.py`: The main model file containing an implementation of the \textbf{naive} sequence to sequence model, simlar to the default sequence decoder in AllenNLP available [here](https://github.com/allenai/allennlp/blob/master/allennlp/models/encoder_decoders/simple_seq2seq.py). 
-We have included additional hooks into the code for supporting the "informed" version, however the implementation of the extra part is mostly incomplete; the additional hooks exist to support the extra column in the data, the extra fields in the configuration, etc. This is the only Python file you need to change.
-* `naive_{java,python}.json`: The configuration files for training and running the naive sequence to sequence model, on respective language.
-These configuration files "turn off" the extra embedding part, and run the model in `informed_seq2seq.py`.
-* `informed_{java,python}.json`:
-  Configuration files that "enable" the extra encoder/embedding part, which, if your implementation is correct, should provide much higher gains. The command to run it will be identical to the one above, with a different configuration file.
+* `decoders.py`: You will need to complete the functions `nucleus_sampling` and `beam_search_decoding`.
+* `generate.py`: You will change the decoder being used to generate summaries in the `generate()` function in this file.
 
-### Files you need not modify
+#### Files you need not modify
 
-* `informed_seq2seq_reader.json`: provides a _reader_ to read the the data
-* `informed_seq2seq_predictor.json`: set up a _predictor_ that will be used to set up the demo.
+* `decoders_test.py`: Used to test your implementation of nucleus and beam search decoding. 
+* `evaluate.py`: Used to evalute generated summaries.
+* `models.py`: Wrapper around models to interface with the `Candidate` class in `decoder.py`
+
+## Running Tests
+The file `decoders_test.py` contains a test for nucleus sampling and for beam search decoding.
+If you are able to run `python decoders_test.py` without any error, then you should be good to go!
+
+
+One your tests have passed, you can continue to generating summaries.
+
+## Generating Summaries
+Summaries are generated using `generate.py`, which loads in a [BART Transformer model](https://huggingface.co/transformers/model_doc/bart.html#transformers.BartForConditionalGeneration) that has [already been trained](https://huggingface.co/sshleifer/distilbart-xsum-1-1) on the summarization dataset [XSUM](https://huggingface.co/datasets/viewer/?dataset=xsum).
+Now we want to use this model to generate summaries on a small amount of validation data.
+
+Running `generate.py` as provided will use greedy decoding to generate summaries. 
+To change the decoder, you will need to change the function call in the `generate()` function.
+
+``` bash
+python generate.py 
+    --input_file data/xsum_val_small.jsonl 
+    --output_file <output file for generated summaries> 
+```
+
+## Evaluating Summaries
+Your prediction file is evaluated using the ROUGE-L metric.
+To evaluate your model, run:
+
+``` bash
+python generate.py 
+    --gold_file data/xsum_val_small.jsonl 
+    --predictions_file <file from generate.py>
+    --output_file <file for instance-wise ROUGE-L scores> (optional)
+```
+
+This will print out the ROUGE-L score on the validation set.
+Setting the flag `--output_file` will write out the ROUGE-L scores per generated summary.
