@@ -104,8 +104,10 @@ def top_k_sampling(
     while len(cand) < max_length and cand.last_decoded_id != eos_id:
         # Get possible continuation candidates
         potential_cands = cand.get_next_cands(model)
+
         # Sort continuations by their last decoded ID probabilities
         potential_cands = sorted(potential_cands, key=lambda x: x.last_id_prob, reverse=True)
+
         # Get probabilities for all the last decoded IDs
         last_id_probs = [cand.last_id_prob for cand in potential_cands]
 
@@ -150,8 +152,10 @@ def nucleus_sampling(
     while len(cand) < max_length and cand.last_decoded_id != eos_id:
         # Get possible continuation candidates
         potential_cands = cand.get_next_cands(model)
+
         # Sort continuations by their last decoded ID probabilities
         potential_cands = sorted(potential_cands, key=lambda x: x.last_id_prob, reverse=True)
+
         # Get probabilities for all the last decoded IDs
         last_id_probs = [cand.last_id_prob for cand in potential_cands]
 
