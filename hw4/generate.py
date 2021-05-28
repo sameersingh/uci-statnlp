@@ -9,7 +9,7 @@ import decoders
 from models import TransformerModel
 
 
-def generate_summary(model, tokenizer, document):
+def generate_summary(model, tokenizer, document, decoder):
     """ Generates a summary for a single document
 
     Parameters
@@ -18,6 +18,7 @@ def generate_summary(model, tokenizer, document):
         fine-tuned for summarization
     tokenizer: ``BartForConditionalGeneration``: A corresponding BART tokenizer
     document: ``str`` A single document to be summarized
+    decoder: ``str`` The decoder to use for decoding
 
     Returns:
     ----------
@@ -28,19 +29,42 @@ def generate_summary(model, tokenizer, document):
     metadata = {'input_ids': input_ids}
     model_wrapper = TransformerModel(model)
 
-    # TODO: Modify this function call to change the decoding algorithm used.
-    #  Be sure not to remove any of the parameters (e.g. model, eos_id,
-    #  etc.) since these are all needed. Just added necessary
-    #  parameters (e.g. beam_size for beam search decoding).
-    # NOTE: For beam_search_decoding, we get a list out, so you will have to
-    #  set top_candidate to the first element of the returned list.
-    top_candidate = decoders.greedy_decoding(
-        model=model_wrapper,
-        max_length=51,
-        eos_id=tokenizer.eos_token_id,
-        decoded_ids=[tokenizer.bos_token_id],
-        metadata=metadata
-    )
+    if decoder == 'greedy':
+        top_candidate = decoders.greedy_decoding(
+            model=model_wrapper,
+            max_length=50,
+            eos_id=tokenizer.eos_token_id,
+            decoded_ids=[tokenizer.bos_token_id],
+            metadata=metadata
+        )
+    elif decoder == 'beam_search':
+        top_candidate = decoders.beam_search_decoding(
+            model=model_wrapper,
+            beam_size=3,
+            max_length=50,
+            eos_id=tokenizer.eos_token_id,
+            decoded_ids=[tokenizer.bos_token_id],
+            metadata=metadata
+        )[0]
+    elif decoder == 'top_k':
+        top_candidate = decoders.top_k_sampling(
+            model=model_wrapper,
+            top_k=3,
+            temperature=0.5,
+            max_length=50,
+            eos_id=tokenizer.eos_token_id,
+            decoded_ids=[tokenizer.bos_token_id],
+            metadata=metadata
+        )
+    elif decoder == 'nucleus':
+        top_candidate = decoders.nucleus_sampling(
+            model=model_wrapper,
+            top_p=0.5,
+            max_length=50,
+            eos_id=tokenizer.eos_token_id,
+            decoded_ids=[tokenizer.bos_token_id],
+            metadata=metadata
+        )
 
     summary_ids = top_candidate.decoded_ids
     summary = tokenizer.decode(summary_ids, skip_special_tokens=True)
@@ -52,6 +76,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_file")
     parser.add_argument("--output_file")
+    parser.add_argument("--decoder", choices=['greedy', 'beam_search', 'top_k', 'nucleus'])
     args = parser.parse_args()
 
     model_name = 'sshleifer/distilbart-xsum-1-1'
@@ -63,7 +88,8 @@ def main():
     for line in tqdm.tqdm(jsonlines.open(args.input_file)):
         summary, summary_score = generate_summary(model=model,
                                                   tokenizer=tokenizer,
-                                                  document=line['document'])
+                                                  document=line['document'],
+                                                  decoder=args.decoder)
 
         outputs.append({'id': line['id'],
                         'generated_summary': summary,

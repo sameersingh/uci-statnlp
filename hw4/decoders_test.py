@@ -1,26 +1,48 @@
 import math
 import random
 
-from decoders import beam_search_decoding, nucleus_sampling
+from decoders import top_k_sampling, beam_search_decoding, nucleus_sampling
 from models import FixedModel
 
 
-def test_nucleus_sampling():
+def test_temperature_random_sampling(model):
+    print('\nTesting Temperature Random Sampling...\n-----------------')
+
+    # set seed for deterministic running/testing
+    random.seed(2, version=1)
+
+    # Only decode up to 6 IDs
+    max_length = 6
+    # If we have generated the ID 0 (end-of-sentence ID), stop generating
+    eos_id = 0
+    # Temperature scaling of 0.5
+    temperature=0.5
+
+    # Call top_k sampling with a large k, making this random sampling
+    candidate = top_k_sampling(
+        model=model,
+        top_k=999,
+        temperature=temperature,
+        max_length=max_length,
+        eos_id=eos_id,
+    )
+
+    # Check the generated candidate against gold candidate
+    gold_candidate = {'decoded_ids': [1, 0], 'score': -3.2188758248682006}
+
+    print(f"Your candidate. Decoded IDs: {candidate.decoded_ids} Score: {candidate.score}")
+    print(f"Gold candidate. Decoded IDs: {gold_candidate['decoded_ids']} Score: {gold_candidate['score']}")
+    assert candidate.decoded_ids == gold_candidate['decoded_ids']
+    assert math.isclose(candidate.score, gold_candidate['score'], abs_tol=1e-3)
+
+
+def test_nucleus_sampling(model):
     print('\nTesting Nucleus Sampling...\n-----------------')
 
     # set seed for deterministic running/testing
     random.seed(2, version=1)
 
-    # Next ID probabilities over 7 decoding steps over a vocab of 4 IDs (tokens)
-    model = FixedModel([[0.1, 0.2, 0.3, 0.4],
-                        [0.2, 0.3, 0.4, 0.1],
-                        [0.1, 0.3, 0.4, 0.2],
-                        [0.4, 0.2, 0.3, 0.1],
-                        [0.1, 0.4, 0.2, 0.4],
-                        [0.1, 0.4, 0.2, 0.3],
-                        [0.1, 0.2, 0.3, 0.4]])
-
-    # Filter for the smallest number of top IDs where the probability is >= 0.5
+    # Filter for the smallest # of IDs where the accumulated prob is >= 0.5
     top_p = 0.5
     # Only decode up to 6 IDs
     max_length = 6
@@ -44,23 +66,14 @@ def test_nucleus_sampling():
     assert math.isclose(candidate.score, gold_candidate['score'], abs_tol=1e-3)
 
 
-def test_beam_search_decoder():
+def test_beam_search_decoder(model):
     print('\nTesting Beam Search Decoder...\n-----------------')
-
-    # Next ID probabilities over 7 decoding steps over a vocab of 4 IDs (tokens)
-    model = FixedModel([[0.1, 0.2, 0.3, 0.4],
-                        [0.2, 0.3, 0.4, 0.1],
-                        [0.1, 0.3, 0.4, 0.2],
-                        [0.4, 0.2, 0.3, 0.1],
-                        [0.1, 0.4, 0.2, 0.4],
-                        [0.1, 0.4, 0.2, 0.3],
-                        [0.1, 0.2, 0.3, 0.4]])
 
     # Keep around 3 candidates at each time point
     beam_size=3
     # Only decode up to 6 IDs
     max_length = 6
-    # If a candidate on the beam has generated 0 (EOS ID) then the beam is done
+    # If we have generated the ID 0 (end-of-sentence ID), stop generating
     eos_id = 0
 
     # Call beam search to get top `beam_size` candidates
@@ -85,7 +98,26 @@ def test_beam_search_decoder():
         assert math.isclose(cand.score, gold_cand['score'], abs_tol=1e-3)
 
 
+def main():
+    # Model used for testing.
+    # Contains next ID probabilities over 7 decoding steps over a vocab of 4 IDs
+    # This model is conditionally independent, meaning that no matter what
+    # the previously decoded ID was, the following probabilities is fixed.
+    #
+    # We use a ID of 0 as the end-of-sentence ID.
+    model = FixedModel([[0.1, 0.2, 0.3, 0.4],
+                        [0.2, 0.3, 0.4, 0.1],
+                        [0.1, 0.3, 0.4, 0.2],
+                        [0.4, 0.2, 0.3, 0.1],
+                        [0.1, 0.4, 0.2, 0.4],
+                        [0.1, 0.4, 0.2, 0.3],
+                        [0.1, 0.2, 0.3, 0.4]])
+
+    test_temperature_random_sampling(model)
+    test_nucleus_sampling(model)
+    test_beam_search_decoder(model)
+
+
 if __name__ == "__main__":
-    test_nucleus_sampling()
-    test_beam_search_decoder()
+    main()
 

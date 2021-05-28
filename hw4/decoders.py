@@ -75,10 +75,32 @@ class Candidate:
         return next_candidates
 
 
+#### Helper Functions ####
+def temperature_scaling(scores, temperature):
+    # scale scores by temperature
+    scores = [s**(1/temperature) for s in scores]
+    # re-normalize
+    scores = [s/sum(scores) for s in scores]
+    return scores
+
+
+def is_cand_finished(cand, max_length, eos_id):
+    """
+    A candidate is finished generating if the number of decoded IDs of
+    the candidate is at the max length or if the EOS ID has been generated
+    """
+    if len(cand) >= max_length or cand.last_decoded_id == eos_id:
+        return True
+    else:
+        return False
+
+
+#### Decoding Functions ####
 def top_k_sampling(
     model,
     top_k,
-    max_length=100,
+    temperature=1,
+    max_length=50,
     eos_id=-1,
     decoded_ids=[],
     metadata=None
@@ -99,9 +121,7 @@ def top_k_sampling(
     """
     cand = Candidate(decoded_ids=decoded_ids, metadata=metadata)
 
-    # Continue decoding while the number of decoded IDs of the candidate is
-    # less than the max length and while the EOS ID has not been generated.
-    while len(cand) < max_length and cand.last_decoded_id != eos_id:
+    while not is_cand_finished(cand, max_length, eos_id):
         # Get possible continuation candidates
         potential_cands = cand.get_next_cands(model)
 
@@ -125,7 +145,7 @@ def top_k_sampling(
 def nucleus_sampling(
     model,
     top_p,
-    max_length=100,
+    max_length=50,
     eos_id=-1,
     decoded_ids=[],
     metadata=None
@@ -149,7 +169,7 @@ def nucleus_sampling(
 
     # Continue decoding while the number of decoded IDs of the candidate is
     # less than the max length and while the EOS ID has not been generated.
-    while len(cand) < max_length and cand.last_decoded_id != eos_id:
+    while not is_cand_finished(cand, max_length, eos_id):
         # Get possible continuation candidates
         potential_cands = cand.get_next_cands(model)
 
@@ -178,7 +198,7 @@ def nucleus_sampling(
 
 def greedy_decoding(
     model,
-    max_length=100,
+    max_length=50,
     eos_id=-1,
     decoded_ids=[],
     metadata=None
@@ -200,7 +220,7 @@ def greedy_decoding(
 
     # Continue decoding while the number of decoded IDs of the candidate is
     # less than the max length and while the EOS ID has not been generated.
-    while len(cand) < max_length and cand.last_decoded_id != eos_id:
+    while not is_cand_finished(cand, max_length, eos_id):
         # Get all possible continuation candidates
         potential_cands = cand.get_next_cands(model)
 
@@ -216,11 +236,10 @@ def greedy_decoding(
 def beam_search_decoding(
     model,
     beam_size,
-    max_length=100,
+    max_length=50,
     eos_id=-1,
     decoded_ids=[],
     metadata=None,
-    num_return=1
 ):
     """
     Parameters
@@ -256,7 +275,8 @@ def beam_search_decoding(
         #  beam search. To do this you will have to:
         #  * Get the top `beam_size - len(finished_cands)` number of candidates
         #    from potential candidates.
-        #  * Of these candidates, add the completed ones to `finished_cands`.
+        #  * Of these candidates, add the completed ones to `finished_cands`
+        #    (hint: use `is_cand_finished` function).
         #  * Update `cands` with remaining ones.
 
 
