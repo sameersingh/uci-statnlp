@@ -49,6 +49,17 @@ def generate_summary(model, tokenizer, document, decoder):
             decoded_ids=[tokenizer.bos_token_id],
             metadata=metadata
         )[0]
+    elif decoder == 'random':
+        # Random sampling
+        top_candidate = decoders.top_k_sampling(
+            model=model_wrapper,
+            top_k=int(1e9), # random sampling is top-K with large K
+            temperature=1,
+            max_length=50,
+            eos_id=tokenizer.eos_token_id,
+            decoded_ids=[tokenizer.bos_token_id],
+            metadata=metadata
+        )
     elif decoder == 'top_k':
         top_candidate = decoders.top_k_sampling(
             model=model_wrapper,
@@ -79,7 +90,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_file")
     parser.add_argument("--output_file")
-    parser.add_argument("--decoder", choices=['greedy', 'beam_search', 'top_k', 'nucleus'])
+    parser.add_argument("--decoder",
+                        choices=['greedy', 'beam_search', 'random', 'top_k', 'nucleus'])
     args = parser.parse_args()
 
     model_name = 'sshleifer/distilbart-xsum-1-1'

@@ -35,7 +35,7 @@ You do **not** have to tune these parameters for this homework.
 python generate.py 
     --input_file data/xsum_val_small.jsonl 
     --output_file <output file for generated summaries>
-    --decoder <options are "greedy", "beam_search", "top_k", and "nucleus"> 
+    --decoder <options are "greedy", "beam_search", "random", top_k", and "nucleus"> 
 ```
 
 ## Evaluating Summaries
