@@ -75,15 +75,6 @@ class Candidate:
         return next_candidates
 
 
-#### Helper Functions ####
-def temperature_scaling(scores, temperature):
-    # scale scores by temperature
-    scores = [s**(1/temperature) for s in scores]
-    # re-normalize
-    scores = [s/sum(scores) for s in scores]
-    return scores
-
-
 def is_cand_finished(cand, max_length, eos_id):
     """
     A candidate is finished generating if the number of decoded IDs of
@@ -95,7 +86,6 @@ def is_cand_finished(cand, max_length, eos_id):
         return False
 
 
-#### Decoding Functions ####
 def top_k_sampling(
     model,
     top_k,
@@ -123,9 +113,6 @@ def top_k_sampling(
     cand = Candidate(decoded_ids=decoded_ids, metadata=metadata)
 
     while not is_cand_finished(cand, max_length, eos_id):
-        # TODO: Somewhere in this while loop, add a single call to the
-        #  `temperature_scaling` function to scale the probabilities
-
         # Get possible continuation candidates
         potential_cands = cand.get_next_cands(model)
 
@@ -138,6 +125,9 @@ def top_k_sampling(
         # Get the top-K continuations
         potential_cands = potential_cands[:top_k]
         last_id_probs = last_id_probs[:top_k]
+
+        # TODO: Scale `last_id_probs` via temperature-scaling via the
+        #  `temperature` parameter
 
         # Sample a candidate based on the probability of it's last ID
         # random.choices() automatically re-weights the probabilities!
