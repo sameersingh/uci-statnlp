@@ -11,24 +11,26 @@ def test_temperature_random_sampling(model):
     # set seed for deterministic running/testing
     random.seed(2, version=1)
 
+    # Get the top 2 k's at each time step
+    top_k = 3
     # Only decode up to 6 IDs
     max_length = 6
     # If we have generated the ID 0 (end-of-sentence ID), stop generating
     eos_id = 0
-    # Temperature scaling of 0.5
-    temperature=0.5
+    # Temperature scaling of 0.05 (basically greedy decoding)
+    temperature=0.05
 
-    # Call top_k sampling with a large k, making this random sampling
+    # Call top_k sampling
     candidate = top_k_sampling(
         model=model,
-        top_k=999,
+        top_k=top_k,
         temperature=temperature,
         max_length=max_length,
         eos_id=eos_id,
     )
 
     # Check the generated candidate against gold candidate
-    gold_candidate = {'decoded_ids': [1, 0], 'score': -3.2188758248682006}
+    gold_candidate = {'decoded_ids': [3, 2, 2, 0], 'score': -3.66516292749662}
 
     print(f"Your candidate. Decoded IDs: {candidate.decoded_ids} Score: {candidate.score}")
     print(f"Gold candidate. Decoded IDs: {gold_candidate['decoded_ids']} Score: {gold_candidate['score']}")
@@ -42,8 +44,8 @@ def test_nucleus_sampling(model):
     # set seed for deterministic running/testing
     random.seed(2, version=1)
 
-    # Filter for the smallest # of IDs where the accumulated prob is >= 0.5
-    top_p = 0.5
+    # Filter for the smallest # of IDs where the accumulated prob is >= 0.7
+    top_p = 0.7
     # Only decode up to 6 IDs
     max_length = 6
     # If we have generated the ID 0 (end-of-sentence ID), stop generating
@@ -109,7 +111,7 @@ def main():
                         [0.2, 0.3, 0.4, 0.1],
                         [0.1, 0.3, 0.4, 0.2],
                         [0.4, 0.2, 0.3, 0.1],
-                        [0.1, 0.4, 0.2, 0.4],
+                        [0.1, 0.4, 0.2, 0.3],
                         [0.1, 0.4, 0.2, 0.3],
                         [0.1, 0.2, 0.3, 0.4]])
 

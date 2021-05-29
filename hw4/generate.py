@@ -1,5 +1,6 @@
 import argparse
 import json
+import random
 
 import jsonlines
 import tqdm
@@ -7,6 +8,8 @@ from transformers import BartTokenizer, BartForConditionalGeneration
 
 import decoders
 from models import TransformerModel
+
+random.seed(0)
 
 
 def generate_summary(model, tokenizer, document, decoder):
@@ -59,7 +62,7 @@ def generate_summary(model, tokenizer, document, decoder):
     elif decoder == 'nucleus':
         top_candidate = decoders.nucleus_sampling(
             model=model_wrapper,
-            top_p=0.5,
+            top_p=0.2,
             max_length=50,
             eos_id=tokenizer.eos_token_id,
             decoded_ids=[tokenizer.bos_token_id],

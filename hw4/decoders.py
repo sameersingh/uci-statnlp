@@ -119,9 +119,13 @@ def top_k_sampling(
     -------
     cand: ``Candidate`` The candidate at the end of top-k sampling
     """
+
     cand = Candidate(decoded_ids=decoded_ids, metadata=metadata)
 
     while not is_cand_finished(cand, max_length, eos_id):
+        # TODO: Somewhere in this while loop, add a single call to the
+        #  `temperature_scaling` function to scale the probabilities
+
         # Get possible continuation candidates
         potential_cands = cand.get_next_cands(model)
 
