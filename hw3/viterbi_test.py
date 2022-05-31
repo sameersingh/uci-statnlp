@@ -16,7 +16,7 @@ def run_viterbi_test():
     import numpy as np
     from itertools import product
 
-    maxN = 7 # maximum length of a sentence (min is 1)
+    maxN = 7 # maximum length of a sentence (min is 0)
     maxL = 4 # maximum number of labels (min is 2)
     num_tests = 1000 # number of sentences to generate
     random.seed(0)
@@ -29,7 +29,7 @@ def run_viterbi_test():
     passed_s = 0 # how many times the correct score was returned
 
     for t in range(num_tests):
-        N = random.randint(1, maxN+1)
+        N = random.randint(0, maxN+1)
         L = random.randint(2, maxL+1)
 
         # Generate the scores
@@ -40,25 +40,28 @@ def run_viterbi_test():
 
         # run viterbi
         (viterbi_s,viterbi_y) = run_viterbi(emission_scores, trans_scores, start_scores, end_scores)
-        # print "Viterbi", viterbi_s, viterbi_y
+        # print ("Viterbi", viterbi_s, viterbi_y)
 
         # compute the best sequence and score
         best_y = []
         best_s = -np.inf
-        for y in product(range(L), repeat=N): # all possible ys
-            # compute its score
-            score = 0.0
-            score += start_scores[y[0]]
-            for i in range(N-1):
-                score += trans_scores[y[i], y[i+1]]
-                score += emission_scores[i,y[i]]
-            score += emission_scores[N-1,y[N-1]]
-            score += end_scores[y[N-1]]
-            # update the best
-            if score > best_s:
-                best_s = score
-                best_y = list(y)
-        # print "Brute", best_s, best_y
+        if not N:
+            best_s = 0
+        else:
+            for y in product(range(L), repeat=N): # all possible ys
+                # compute its score
+                score = 0.0
+                score += start_scores[y[0]]
+                for i in range(N-1):
+                    score += trans_scores[y[i], y[i+1]]
+                    score += emission_scores[i,y[i]]
+                score += emission_scores[N-1,y[N-1]]
+                score += end_scores[y[N-1]]
+                # update the best
+                if score > best_s:
+                    best_s = score
+                    best_y = list(y)
+            # print ("Brute", best_s, best_y)
 
         # mismatch if any label prediction doesn't match
         match_y = True
