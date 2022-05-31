@@ -104,6 +104,8 @@ class TwitterDataset(Dataset):
                 elements = line.strip().split('\t')
                 # empty line means end of sentence
                 if elements == [""]:
+                    if len(tokens) == 0:
+                        continue
                     self._dataset.append({'tokens': tokens, 'tags': tags})
                     tokens, tags = [], []
                 else:
