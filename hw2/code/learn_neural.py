@@ -29,7 +29,6 @@ import torch
 
 
 BASE_DIR = ".."
-BASE_DIR = "/home/kat/Projects/PhD/TA/uci-statnlp-private/hw2-langmodels-decoding"
 
 
 def parse_args():
