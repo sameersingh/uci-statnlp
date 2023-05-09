@@ -1,0 +1,3 @@
+{ "prompt": "the government of", "constraints_list": ["united", "states", "america"]}
+{ "prompt": "the united", "constraints_list": ["states", "union"]}
+{ "prompt": "secretary of the", "constraints_list": ["treasury", "senate"]}
