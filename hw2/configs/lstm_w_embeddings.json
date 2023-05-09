@@ -3,7 +3,7 @@
   "model": {
     "embeddings": {
       "embedding_dim": 50,
-      "embedding_path": "/home/kat/Projects/PhD/TA/uci-statnlp-private/hw2-langmodels-decoding/data/downloaded_embeddings/glove.6B.50d.txt"
+      "embedding_path": "/home/usr/downloaded_embeddings/glove.6B.50d.txt"
     },
     "encoder": {
       "type": "torch.nn.LSTM",
