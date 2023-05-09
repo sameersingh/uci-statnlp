@@ -1,0 +1,36 @@
+{
+  "random_seed": 42,
+  "model": {
+    "embeddings": {
+      "embedding_dim": 50
+    },
+    "encoder": {
+      "type": "torch.nn.LSTM",
+      "num_layers": 1,
+      "dropout": 0.2,
+      "hidden_size": 50
+    },
+    "projection": {
+      "type": "torch.nn.Linear"
+    }
+  },
+  "training": {
+    "train_eval_frac": 0.8,
+    "seq_len": 96,
+    "batch_size": 32,
+    "num_epochs": 200,
+    "clip": 5,
+    "log_interval": 5,
+    "early_stopping_patience": 10, 
+    "optimizer": {
+      "type": "torch.optim.Adam",
+      "lr": 0.1
+    },
+    "scheduler": {
+      "type": "torch.optim.lr_scheduler.ReduceLROnPlateau",
+      "factor": 0.5,
+      "mode": "min",
+      "patience": 3
+    }
+  }
+}

@@ -90,3 +90,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# vs code stuff
+.vscode
+
+# python specific
+__pycache__/
+.pytest_cache/

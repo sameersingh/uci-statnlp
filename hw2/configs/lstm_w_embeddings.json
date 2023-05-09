@@ -1,0 +1,40 @@
+{
+  "random_seed": 42,
+  "model": {
+    "embeddings": {
+      "embedding_dim": 50,
+      "embedding_path": "/home/kat/Projects/PhD/TA/uci-statnlp-private/hw2-langmodels-decoding/data/downloaded_embeddings/glove.6B.50d.txt"
+    },
+    "encoder": {
+      "type": "torch.nn.LSTM",
+      "num_layers": 1,
+      "dropout": 0.2,
+      "hidden_size": 128
+    },
+    "projection": {
+      "type": "torch.nn.Linear"
+    }
+  },
+  "training": {
+    "apply_bptt_reg": true,
+    "train_eval_frac": 0.8,
+    "seq_len": 96,
+    "batch_size": 32,
+    "num_epochs": 200,
+    "clip": 1,
+    "clip_mode": "grad",
+    "log_interval": 5,
+    "early_stopping_patience": 30, 
+    "early_stopping_min_lr": 1e-8,
+    "optimizer": {
+      "type": "torch.optim.Adam",
+      "lr": 5
+    },
+    "scheduler": {
+      "type": "torch.optim.lr_scheduler.ReduceLROnPlateau",
+      "factor": 0.5,
+      "mode": "min",
+      "patience": 5
+    }
+  }
+}
