@@ -55,6 +55,12 @@ def parse_args():
         type=str,
         help="List of tokens used in constrained decoding. Tokens should be comma-separated.",
     )
+    parser.add_argument(
+        "--device",
+        default="cpu",
+        type=str,
+        help="The device to run the neural models on."
+    )
 
     args = parser.parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
@@ -68,9 +74,9 @@ def parse_args():
     return args
 
 
-def load_model(model_filepath: str) -> LangModel:
+def load_model(model_filepath: str, device: str=None) -> LangModel:
     if "neural" in model_filepath:
-        return NeuralLM.load_model(model_filepath)
+        return NeuralLM.load_model(model_filepath, device)
     elif "interp" in model_filepath:
         return InterpNgram.load_model(model_filepath)
     else:
@@ -83,7 +89,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # Step 1. Load model from file
     # -------------------------------------------------------------------------
-    model = load_model(args.model_filepath)
+    model = load_model(args.model_filepath, args.device)
 
     # -------------------------------------------------------------------------
     # Step 2. Tokenize the prompt

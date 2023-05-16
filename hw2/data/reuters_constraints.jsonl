@@ -1,2 +1,5 @@
-{"prompt": "the central", "constraints_list": ["bank", "company", "commission", "market", "department"]}
-{"prompt": "in filing with the", "constraints_list": ["commission", "exchange"]}
+{"prompt": "The central", "constraints_list": ["bank", "company", "commission", "market", "department", "Bank", "Company", "Commission", "Market", "Department"]}
+{"prompt": "The Central", "constraints_list": ["bank", "company", "commission", "market", "department", "Bank", "Company", "Commission", "Market", "Department"]}
+{"prompt": "in filing with the", "constraints_list": ["commission", "exchange", "Commission", "Exchange"]}
+{"prompt": "in filing with the", "constraints_list": ["commission", "exchange", "Commission", "Exchange"]}
+{"prompt": "The price is subject", "constraints_list": ["to"]}

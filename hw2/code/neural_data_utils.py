@@ -22,14 +22,12 @@ class LMDataset(Dataset):
         assert max_seq_len is None or max_seq_len > 0
 
         self.targets, self.inputs = [], []
-
         for t in train_data:
             if max_seq_len is None:
                 max_seq_len = len(t)-1
 
             target = t[1:1+max_seq_len]
             inpt = t[:len(target)]
-
 
             self.targets.append(target)
             self.inputs.append(inpt)
@@ -69,6 +67,7 @@ def get_dataloader(lm_dataset: LMDataset, batch_size: int, padding_idx: int) -> 
             t, i = example["targets"], example["inputs"]
 
             assert len(t) == len(i), f"Length of target and input does not match: {len(t)} vs {len(i)}"
+            assert len(t) > 1, f"Length of target is <=1: input: '{i}', target: '{t}'"
             targets.append(t)
             inputs.append(i)
             lengths.append(len(t))
@@ -82,7 +81,8 @@ def get_dataloader(lm_dataset: LMDataset, batch_size: int, padding_idx: int) -> 
 
     bucket_loader = DataLoader(
         lm_dataset,
-        shuffle=True, batch_size=batch_size,
-        collate_fn=collate_batch,
+        batch_size=batch_size,
+        collate_fn=collate_batch, pin_memory=True,
+        drop_last=True
     )
     return bucket_loader

@@ -16,12 +16,11 @@ import torch.nn.functional as F
 
 
 def load_embeddings(embedding_dim: int, vocab: List[str], padding_idx: int, embedding_path: str =None, init_range: float=0.1):
-    import torch
-
     # initialize embeddings randomly
     if embedding_path is None:
         embeddings = torch.nn.Embedding(num_embeddings=len(vocab),
                                         embedding_dim=embedding_dim)
+
     # read in pretrained embeddings
     else:
         word2embeddings = {}
@@ -33,14 +32,13 @@ def load_embeddings(embedding_dim: int, vocab: List[str], padding_idx: int, embe
                 word2embeddings[word] = embedding
 
         # Since there may be some missing embeddings for some words
-        #
+        # we will default initialize the embeddings
         ordered_embeddings = []
         for idx, word in enumerate(vocab):
-            embeds = word2embeddings.get(word, torch.FloatTensor(embedding_dim).uniform_(-init_range, init_range))
-
             if idx == padding_idx:
                 embeds = torch.FloatTensor(embedding_dim).zero_()
-
+            else:
+                embeds = word2embeddings.get(word, torch.FloatTensor(embedding_dim).uniform_(-init_range, init_range))
             ordered_embeddings.append(embeds)
 
         ordered_embeddings = torch.vstack(ordered_embeddings)
@@ -107,6 +105,7 @@ class LSTMWrapper(nn.Module):
         self._emb_dim = embeddings["embedding_dim"]
 
         encoder["input_size"] = self._emb_dim
+        encoder["batch_first"] = True
         self._encoder = load_object_from_dict(encoder)
         self._hid_dim = encoder["hidden_size"]
 
@@ -114,19 +113,15 @@ class LSTMWrapper(nn.Module):
         projection["out_features"] = self._out_dim
         self._projection = load_object_from_dict(projection)
 
+        assert padding_idx is not None
         self.loss = nn.CrossEntropyLoss(ignore_index=padding_idx, reduction='sum')
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
     def forward(self, inputs: torch.Tensor, labels: torch.Tensor=None) -> tuple:
         inputs = inputs.to(self.device) # shape: batch_size x seq_len
-
         embeddings = self._embeddings(inputs)  # shape: batch_size x seq_len x embed_size
-        embeddings = embeddings.permute(1, 0, 2) # shape: seq_len x batch_size x embed_size
-
         encoder_outputs = self._encoder(embeddings)[0] if self._encoder else embeddings
-        encoder_outputs = encoder_outputs.permute(1, 0, 2) # shape: batch_size x seq_len x out_size
-
         logits = self._projection(encoder_outputs) # shape: batch_size x seq_len x out_size
 
         if labels is None:
@@ -136,12 +131,10 @@ class LSTMWrapper(nn.Module):
         return loss, logits
 
     def save(self, filepath: str):
-        torch.save(self.state_dict(), filepath)
+        # save the structure of this class together with the model
+        # (to store just the weights, we would use self.state_dict() instead)
+        torch.save(self, filepath)
 
     @staticmethod
-    def load(filepath: str, device=None, **kwargs) -> "LSTMWrapper":
-        model = LSTMWrapper(**kwargs)
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        model.load_state_dict(torch.load(filepath, map_location=device))
-        return model
+    def load(filepath: str) -> "LSTMWrapper":
+        return torch.load(filepath)

@@ -1,6 +1,6 @@
 from lm import LangModel
 from copy import deepcopy
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pickle
@@ -54,7 +54,7 @@ class NeuralLM(LangModel):
     _NAME_ = "neural"
     PAD_TOKEN = "<pad>"
 
-    def __init__(self, model_configs: Dict[str, Any], filepath=None, **kwargs):
+    def __init__(self, model_configs: Dict[str, Any], filepath=None, device=None, **kwargs):
         super().__init__(**kwargs)
         self.is_ngram = False
 
@@ -72,9 +72,9 @@ class NeuralLM(LangModel):
 
         # Initalize the model
         if filepath is not None:
-            self.model = utils.LSTMWrapper.load(filepath, **deepcopy(model_configs))
+            self.model = utils.LSTMWrapper.load(filepath, device=device, **deepcopy(model_configs))
         else:
-            self.model = utils.LSTMWrapper(vocab=self.vocab, vocab_size=self.vocab_size, **deepcopy(model_configs))
+            self.model = utils.LSTMWrapper(vocab=self.vocab, vocab_size=self.vocab_size, **deepcopy(model_configs), device=device)
         self.model.to(self.model.device)
 
 
@@ -92,8 +92,7 @@ class NeuralLM(LangModel):
 
     def fit_sentence(self, sentence: List[str], **kwargs):
         """Wrapper around the fit corpus."""
-        data = [sentence]
-        self.fit_corpus(data, **kwargs)
+        self.fit_corpus([sentence], **kwargs)
 
     def fit_corpus(
         self,
@@ -124,20 +123,32 @@ class NeuralLM(LangModel):
 
             # prediction is array-like of shape [batch_size, seq_len, output_dim]
             loss, _ = self.model(inputs, targets)
-            (loss / batch_tokens).backward()
-            # Avoid gradient explosion by clipping the gradient above clip
+            # -------------------------------------------------------------------
+            (loss / batch_size).backward()
+            # ^Note: previously we were optimizing the average loss per token with
+            ######  (loss / batch_tokens).backward()
+            # , which could be too small and lead to slow convergence. Now,
+            # we'd like to optimize the average loss per sequence, which should
+            # help converging faster
+            # -------------------------------------------------------------------
+
+            # Optionally use, clipping to avoid vanishing or exploding gradients
             if clip_mode == "grad":
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
+                torch.nn.utils.clip_grad_norm_(self.parameters(), clip)
             elif clip_mode == "val":
-                torch.nn.utils.clip_grad_value_(self.model.parameters(), clip)
-
-            self.grad_metadata += [compute_norm_metadata(self.model.parameters())]
-
+                torch.nn.utils.clip_grad_value_(self.parameters(), clip)
             optimizer.step() # update parameters
+
+            # Collect data
+            self.grad_metadata += [compute_norm_metadata(self.parameters())]
             self.loss_by_step += [loss.detach().sum().item()]
             num_tokens += batch_tokens - len(inputs_len)
             running_loss += self.loss_by_step[-1]
+
+        # Running loss consists of average per token loss
         self.running_loss = running_loss / num_tokens
+        # Running training loss will consist of the average loss per sequence
+        self.running_train_loss = running_loss / len(train_dataset)
 
     def cond_logprob_dist(self, context: torch.LongTensor) -> np.ndarray:
         self.model.eval()
@@ -161,7 +172,7 @@ class NeuralLM(LangModel):
 
         return - loss.sum().cpu().numpy()
 
-    def evaluate(self, sentences: List[torch.Tensor]) -> float:
+    def evaluate(self, sentences: List[torch.Tensor]) -> Tuple[float, float]:
         """Computes the average log loss per token in the specified data."""
         loss = 0
         num_tokens = 0
@@ -169,7 +180,7 @@ class NeuralLM(LangModel):
             loss += self.logprob_sentence(sentence)
             num_tokens += len(sentence) - 1
 
-        return - loss / num_tokens
+        return - loss / num_tokens, - loss / len(sentences)
 
     def save_model(self, filepath: str):
         """Persist the current model to the specified filepath."""
@@ -188,7 +199,7 @@ class NeuralLM(LangModel):
         self.model = model
 
     @staticmethod
-    def load_model(filepath: str, **kwargs) -> "NeuralLM":
+    def load_model(filepath: str, device=None) -> "NeuralLM":
         """Load a model from the specified filepath."""
         if filepath.endswith(".pkl"):
             filepath = filepath[:-4]
@@ -198,9 +209,11 @@ class NeuralLM(LangModel):
             model = pickle.load(f)
 
         # Load LSTM module
-        model.model = utils.LSTMWrapper.load(
-            f"{filepath}__model.pkl", vocab=model.vocab, vocab_size=model.vocab_size, **model.model_configs
-        )
-        model.model.to("cuda" if torch.cuda.is_available() else "cpu")
+        model.model = utils.LSTMWrapper.load(f"{filepath}__model.pkl")
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        model.model.device = device
+        model.model.to(device)
+        model.model.eval()
         return model

@@ -20,7 +20,7 @@ from utils import *
 
 from time import time
 from torch.utils.tensorboard import SummaryWriter
-from typing import List
+from typing import List, Tuple
 
 import argparse, copy, datetime, os, json, random, tqdm, functools
 import numpy as np
@@ -32,10 +32,13 @@ BASE_DIR = ".."
 
 
 def parse_args():
-    # Usage example
-    # $ python -m learn_neural_model --config_filepath ../configs/default.json --min_freq 10
-    # Explaining: Running the model using the above command will fit a
-    # simple LSTM using the model_configs and data_configs.
+    # ------------------------------------------------------------------------------------------
+    # Usage example for evaluation purposes:
+    # ------------------------------------------------------------------------------------------
+    # $ python -m learn_neural --model_dir ../results/neural --datasets brown
+    # The command above will load the model available at ../results/neural/brown/neural.pkl
+    # (note that this code expects to find in two pkl files in the directory, the "__base.pkl"
+    # and the "__model.pkl" file).
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--dataset_path",
@@ -52,7 +55,6 @@ def parse_args():
     parser.add_argument(
         "--config_filepath",
         type=str,
-        # default=f"{BASE_DIR}/configs/lstm.json",
         default=f"{BASE_DIR}/configs/lstm_w_embeddings.json",
         help="Configuration filepath with the model and data configs for "
         "the experiment.",
@@ -72,16 +74,16 @@ def parse_args():
     )
     parser.add_argument(
         "--train",
-        default=True,
-        type=bool,
-        help="use this flag to train the models.",
+        action="store_true",
+        help="Use this flag to train the models.",
     )
     parser.add_argument(
-        "--model_filepath",
-        default=f"",
+        "--model_dir",
+        default=f"{BASE_DIR}/results/neural",
         type=str,
-        help="use this flag to load a model. must be specified if not training.",
+        help="use this flag to load a model. Must be specified if not training.",
     )
+    parser.add_argument("--device", default="cpu", type=str)
     args = parser.parse_args()
 
     # -------------------------------------------------
@@ -101,6 +103,13 @@ def parse_args():
     print_sep(f"[Experiment configs]\n{args}")
     print("Creating results directory:", args.output_dir)
     os.makedirs(args.output_dir, exist_ok=True)
+
+    if args.device is None:
+        args.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    if not args.train:
+        assert args.model_dir is not None, "Must define a path to the directory with models"
+
     return args
 
 
@@ -126,9 +135,12 @@ def get_splits(
     train_data_ids = np.arange(len(train_data))
     np.random.shuffle(train_data_ids)
 
+    train_ids = train_data_ids[:num_examples_train]
+    train_eval_ids = train_data_ids[num_examples_train:]
+
     return (
-        train_data[:num_examples_train],
-        train_data[num_examples_train:],
+        [train_data[i] for i in train_ids],
+        [train_data[i] for i in train_eval_ids],
         dev_data,
         test_data,
     )
@@ -137,21 +149,24 @@ def get_splits(
 def log2tensorboard(
     writer: SummaryWriter,
     epoch: int,
-    train_loss=None,
-    dev_loss=None,
+    train_loss: Tuple[float, float]=None,
+    dev_loss: Tuple[float, float]=None,
     text: dict = None,
     lr: float = None,
-    seq_len: int=None,
+    seq_len: int = None,
     train_loss_by_step: List[float] = None,
     grads=None,
 ):
     if train_loss is not None:
-        writer.add_scalar("loss_train", train_loss, epoch)
-        writer.add_scalar("perplexity_train", np.exp(train_loss), epoch)
+        writer.add_scalar("loss_train_avg_token", train_loss[0], epoch)
+        writer.add_scalar("loss_train_avg_sequence", train_loss[1], epoch)
+
+        writer.add_scalar("perplexity_train", np.exp(train_loss[0]), epoch)
 
     if dev_loss is not None:
-        writer.add_scalar("loss_val", dev_loss, epoch)
-        writer.add_scalar("perplexity_val", np.exp(dev_loss), epoch)
+        writer.add_scalar("loss_val_avg_token", dev_loss[0], epoch)
+        writer.add_scalar("loss_val_avg_sequence", dev_loss[1], epoch)
+        writer.add_scalar("perplexity_val", np.exp(dev_loss[0]), epoch)
 
     if lr is not None:
         writer.add_scalar("learning_rate", lr, epoch)
@@ -165,14 +180,16 @@ def log2tensorboard(
     if train_loss_by_step is not None:
         step = epoch * len(train_loss_by_step)
         for step_i, loss in enumerate(train_loss_by_step):
-            writer.add_scalar("loss_by_step", loss, step+step_i)
+            writer.add_scalar("loss_train_by_step", loss, step + step_i)
 
     if grads is not None:
         step = epoch * len(grads)
         for step_i, grad_metadata in enumerate(grads):
             for norm, norm_values in grad_metadata.items():
-                [writer.add_scalar(f"grads_{norm}/param_{idx}", val, step+step_i)
-                 for idx, val in enumerate(norm_values)]
+                [
+                    writer.add_scalar(f"grads_{norm}/param_{idx}", val, step + step_i)
+                    for idx, val in enumerate(norm_values)
+                ]
 
 
 def persist_if_improved(
@@ -183,12 +200,19 @@ def persist_if_improved(
     previous_loss: float,
     previous_epoch: int,
     early_stop_patience: int = 100,
-):
+) -> Tuple[float, int, bool]:
+    """Determines whether we should the new model is better than the previous.
+    Removing the old one and persisting the new one if it is.
+    """
     if new_loss >= previous_loss:
-        return previous_loss, previous_epoch, ((new_epoch - (previous_epoch or 0)) > early_stop_patience)
+        return (
+            previous_loss,
+            previous_epoch,
+            ((new_epoch - previous_epoch) > early_stop_patience), # early stopping
+        )
 
     # Otherwise we want to remove previous best model
-    if previous_epoch is not None:
+    if previous_epoch != 0:
         os.remove(f"{output_dir}/model_epoch_{previous_epoch}__base.pkl")
         os.remove(f"{output_dir}/model_epoch_{previous_epoch}__model.pkl")
     # ^Explanation of the code above: To avoid wasting too much disk, we eliminate
@@ -200,90 +224,137 @@ def persist_if_improved(
     return new_loss, new_epoch, False
 
 
-def bptt_regularization(seq_len: int, scale: int=5) -> int:
-    p = np.random.uniform()
-    loc = seq_len if p <= 0.95 else seq_len // 2
-    return max(scale, int(np.round(np.random.normal(loc, scale))))
+def setup(configs: dict, output_dir: str) -> str:
+    """Setups the experiment, creating the checkpoint dir and init random seeds."""
+    checkpoint_dir = (
+        output_dir + "/" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    )
+    print("Creating directory to dump checkpoints at", checkpoint_dir)
+    os.makedirs(checkpoint_dir, exist_ok=True)
+
+    # For reproducibility
+    with open(f"{checkpoint_dir}/config.json", "w") as f:
+        f.write(json.dumps(configs, indent=4))
+
+    init_seed(configs.get("random_seed", 8273))
+    return checkpoint_dir
+
 
 def learn_neural_model(
     data: Data,
     configs: dict,
     model_filepath: str,
     output_dir: str,
+    device: str=None,
 ) -> NeuralLM:
-    init_seed(configs.get("random_seed", 8273))
+    """Fits a neural LM.
 
-    checkpoint_dir = output_dir + "/" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    print("Creating directory to dump checkpoints at", checkpoint_dir)
-    os.makedirs(checkpoint_dir, exist_ok=True)
+    It fits a neural LM while logging different aspects of the training
+    during training, including greedy samples of the models, and non-
+    -adjusted perplexity.
+    """
+    checkpoint_dir = setup(configs, output_dir)
 
     writer = SummaryWriter(checkpoint_dir)
+    # syntactic sugar, avoid verbose calls later in the codes
     write = functools.partial(log2tensorboard, writer=writer)
     sample_text = functools.partial(
-        sample, prefixes=PREFIXES, max_new_tokens=5, decoder=DECODERS.MULTINOMIAL
+        sample, prefixes=PREFIXES, max_new_tokens=10, decoder=DECODERS.GREEDY
     )
     def get_lr(optimizer) -> float:
         return [param_group["lr"] for param_group in optimizer.param_groups][0]
 
-    # Create the neural LM
+    # -------------------------------------------------------------------------s
+    # 1. Create the neural language model
+    # -------------------------------------------------------------------------
     model = NeuralLM(
-        vocab2idx=data.vocabulary, model_configs=configs["model"],
+        vocab2idx=data.vocabulary,
+        model_configs=configs["model"],
+        device=device,
     )
-    print("vocab:", model.vocab_size)
 
-    # Create optimizer and learning rate scheduler
-    # (if the loss does not reduce in the next patience epochs, lr decreases by half)
     train_configs = configs["training"]
-    optimizer = load_object_from_dict(train_configs["optimizer"], params=model.parameters())
-    lr_scheduler = load_object_from_dict(train_configs["scheduler"], optimizer=optimizer)
-
+    print("vocab:", model.vocab_size)
+    # -------------------------------------------------------------------------
+    # Create optimizer and learning rate scheduler
+    # -------------------------------------------------------------------------
+    optimizer = load_object_from_dict(
+        train_configs["optimizer"], params=model.parameters()
+    )
+    lr_scheduler = load_object_from_dict(
+        train_configs["scheduler"], optimizer=optimizer
+    )
+    # -------------------------------------------------------------------------
     # Preprocess the training and eval data
+    # -------------------------------------------------------------------------
+    # We do not want to overfit to dev_data to make it a comparable model to
+    # the ngram models, thus we use a fraction of the training data as the
+    # train eval set for setting up the hyperparameters and defining early
+    # stopping.
     train_data, train_val_data, dev_data, test_data = get_splits(
         data, model.preprocess_data, train_configs.get("train_eval_frac")
     )
 
+    # -------------------------------------------------------------------------
+    #                           TRAIN
+    # -------------------------------------------------------------------------
     print_sep("BEFORE TRAINING LSTM (uniform initialization)")
     train_loss, dev_loss = model.evaluate(train_data), model.evaluate(train_val_data)
+    # ^Note: evaluate returns (1) avg logprob by token and (2) avg logprob by sequence
     text = sample_text(model)
     write(epoch=0, train_loss=train_loss, dev_loss=dev_loss, text=text)
 
-    orig_seq_len = train_configs.get("seq_len", 64)
-    best_loss, best_model_epoch = dev_loss, None
+    best_loss, best_model_epoch, epoch = 10e10, 0, -1
     for epoch in tqdm.tqdm(range(train_configs["num_epochs"])):
-        # Step 0. Apply regularization
-        if train_configs.get("apply_bptt_reg", False):
-            seq_len = bptt_regularization(orig_seq_len)
-        else:
-            seq_len = orig_seq_len
 
-        # Step 1. Fit model for one epoch
+        # Fit model for one epoch =============================================
         model.fit_corpus(
             corpus=train_data,
             optimizer=optimizer,
             batch_size=train_configs.get("batch_size", 32),
-            max_seq_len=seq_len,
-            clip=train_configs.get("clip", 1),
+            max_seq_len=train_configs.get("seq_len", 64),
+            clip=train_configs.get("clip", 0.25),
             clip_mode=train_configs.get("clip_mode"),
         )
 
-        # Step 2. Track down perplexity
+        writer.add_scalar("running_avg_token_loss", model.running_loss, epoch+1)
+        writer.add_scalar("running_avg_seq_loss", model.running_train_loss, epoch+1)
+
+        # Track down loss =============================================
         train_loss = model.evaluate(train_data)
         dev_loss = model.evaluate(train_val_data)
 
         lr = get_lr(optimizer)
-        write(epoch=epoch + 1, train_loss=train_loss, dev_loss=dev_loss, lr=lr, seq_len=seq_len)
-        write(epoch=epoch+1, train_loss_by_step=model.loss_by_step, grads=model.grad_metadata)
-        lr_scheduler.step(dev_loss)
+        write(
+            epoch=epoch + 1,
+            train_loss=train_loss,
+            dev_loss=dev_loss,
+            lr=lr
+        )
+        write(
+            epoch=epoch + 1,
+            train_loss_by_step=model.loss_by_step,
+            grads=model.grad_metadata,
+        )
+        lr_scheduler.step(train_loss[0])
 
+        # Sample text =============================================
         if (epoch + 1) % train_configs["log_interval"] == 0:
             print_sep(f"After {epoch+1} Epoch:")
             text = sample_text(model)
             write(epoch=epoch + 1, text=text)
 
+        # Early stopping and best model ===========================
         best_loss, best_model_epoch, early_stopped = persist_if_improved(
             output_dir=checkpoint_dir,
             model=model,
-            new_loss=dev_loss,
+            new_loss=train_loss[0],
+            # ^Note: during training there was a mismatch between validation loss
+            # and quality of the text generated by the LSTM model, hence we
+            # decided, for the time being, to use training loss as the main
+            # guide towards better LSTM-based models. This may lead to overfitting
+            # but we conducted a few manual experiments to guarantee the model's
+            # output were not verbatim of the training data.
             new_epoch=epoch + 1,
             previous_loss=best_loss,
             previous_epoch=best_model_epoch,
@@ -291,15 +362,20 @@ def learn_neural_model(
         )
 
         if early_stopped or lr < train_configs.get("early_stopping_min_lr", 1e-8):
-            print(f"Stop the network after {epoch+1} techniques!")
+            print(f"Stop the network after {epoch+1} epochs!")
             break
 
-    # In case the last model is not the same as the best model, re-load the best one
+    # -------------------------------------------------------------------------
+    #                      POS-TRAINING LOAD BEST MODEL
+    # -------------------------------------------------------------------------
+    # Reload the best model (if it's not the last one)
     if best_model_epoch != (epoch + 1):
         print("\tLoading best model, from epoch", best_model_epoch)
-        model = NeuralLM.load_model(f"{checkpoint_dir}/model_epoch_{best_model_epoch}.pkl")
+        model = NeuralLM.load_model(
+            f"{checkpoint_dir}/model_epoch_{best_model_epoch}.pkl"
+        )
 
-    # evaluate on train, test, and dev
+    # Evaluate perplexity on train, test, and dev (comparable results to ngram models)
     print("PPL train:", model.perplexity(train_data + train_val_data))
     print("PPL dev  :", model.perplexity(dev_data))
     print("PPL test :", model.perplexity(test_data))
@@ -307,52 +383,49 @@ def learn_neural_model(
     print("Persisting Final checkpoint at", model_filepath)
     model.save_model(model_filepath)
     writer.close()
-
     return model
 
 
 if __name__ == "__main__":
     args = parse_args()
-    output_dir = args.output_dir
-    configs = args.configs
 
-    datas = []
+    # List of individual corpus and corresponding models
+    datas: List[Data] = []
     models: List[NeuralLM] = []
 
+    # Learn the models for each of the corpus, and evaluate them in-domain
     for dname in args.datasets:
-        # . Load data
+        # Load data
         print_sep(f"Training {dname}")
-        data = read_texts(
-            args.dataset_path,
-            dname,
-            tokenizer_kwargs={"lowercase": False},
-            min_freq=args.min_freq,
-        )
+        data = read_texts(args.dataset_path, dname, tokenizer_kwargs={"lowercase": False}, min_freq=args.min_freq)
         datas.append(data)
 
         if args.train:
-            # Dump configs to output directory
-            output_dir_name = f"{output_dir}/{dname}"
+            print_sep("Training model")
+            output_dir_name = f"{args.output_dir}/{dname}"
             os.makedirs(output_dir_name, exist_ok=True)
 
-            with open(f"{output_dir_name}/config.json", "w") as f:
-                f.write(json.dumps(configs, indent=4))
-
-            print_sep("Training model")
             neural_model = learn_neural_model(
                 copy.deepcopy(data),
-                copy.deepcopy(configs),
+                copy.deepcopy(args.configs),
                 output_dir_name + f"/{NeuralLM._NAME_}.pkl",
                 output_dir_name,
+                device=args.device,
             )
             models.append(neural_model)
+        else:
+            # it looks for the models in a directory like /some/path/brown/neural.pkl
+            model_filepath = f"{args.model_dir}/{dname}/{NeuralLM._NAME_}.pkl"
+            neural_model = NeuralLM.load_model(model_filepath, device=args.device)
+            models.append(neural_model)
 
-    if not args.train:
-        neural_model = NeuralLM.load_model(args.model_filepath, **configs["model"])
-        models.append(neural_model)
-
+    # Note: unlike the ngram model, since you're not supposed to train your
+    # ngram model, we didn't make a flag --eval available to command line
+    # You should be running this script only with the purpose of evaluating
+    # the model.
     print_sep("Evaluation")
     start = time()
     evaluate_perplexity(args.datasets, datas, models, args.output_dir)
     end = time()
     print(f"Evaluation duration (min): {(end-start)/60:.2}")
+    print("Done!")
