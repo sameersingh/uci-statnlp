@@ -1,2 +1,4 @@
-{ "prompt": "and the children of", "constraints_list": ["god", "israel", "lord"]}
-{ "prompt": "the name of the", "constraints_list": ["god", "israel", "lord"]}
+{ "prompt": "And the children of", "constraints_list": ["god", "israel", "lord", "God", "Israel", "Lord"]}
+{ "prompt": "and the children of", "constraints_list": ["god", "israel", "lord", "God", "Israel", "Lord"]}
+{ "prompt": "the name of the", "constraints_list":  ["god", "israel", "lord", "God", "Israel", "Lord", "monkey", "Monkey"]}
+{ "prompt": "The Name of the", "constraints_list":  ["god", "israel", "lord", "God", "Israel", "Lord", "monkey", "Monkey"]}

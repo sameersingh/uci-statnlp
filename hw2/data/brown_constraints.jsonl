@@ -1,3 +1,6 @@
-{ "prompt": "the government of", "constraints_list": ["united", "states", "america"]}
-{ "prompt": "the united", "constraints_list": ["states", "union"]}
-{ "prompt": "secretary of the", "constraints_list": ["treasury", "senate"]}
+{ "prompt": "the government of", "constraints_list": ["united", "states", "america", "United", "States", "America"]}
+{ "prompt": "the Government of", "constraints_list": ["united", "states", "america", "United", "States", "America"]}
+{ "prompt": "the united", "constraints_list": ["states", "union", "States", "Union", "organization", "Organization"]}
+{ "prompt": "the United", "constraints_list": ["states", "union", "States", "Union", "organization", "Organization"]}
+{ "prompt": "secretary of the", "constraints_list": ["treasury", "senate", "Treasury", "Senate", "Church", "Medical"]}
+{ "prompt": "Secretary of the", "constraints_list": ["treasury", "senate", "Treasury", "Senate", "Church", "Medical"]}
