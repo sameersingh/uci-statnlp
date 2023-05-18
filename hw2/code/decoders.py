@@ -209,7 +209,7 @@ def multinomial_sampling(
         # (note: last_id_prob is in probability space)
         last_id_probs = np.array([cand.last_id_prob for cand in potential_cands])
         last_id_logprobs = np.array([np.log(prob) / temperature for prob in last_id_probs])
-        last_id_logprobs = np.exp(last_id_logprobs)
+        last_id_probs = np.exp(last_id_logprobs)
 
         # ---------------------------------------------------------------------
         # Sample a candidate based on the probability of it's last ID
