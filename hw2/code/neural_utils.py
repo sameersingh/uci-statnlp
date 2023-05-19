@@ -136,5 +136,11 @@ class LSTMWrapper(nn.Module):
         torch.save(self, filepath)
 
     @staticmethod
-    def load(filepath: str) -> "LSTMWrapper":
-        return torch.load(filepath)
+    def load(filepath: str, device: str=None) -> "LSTMWrapper":
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        model = torch.load(filepath, map_location=torch.device(device))
+        model.device = device
+
+        return model
