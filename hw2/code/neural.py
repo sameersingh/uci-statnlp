@@ -209,11 +209,6 @@ class NeuralLM(LangModel):
             model = pickle.load(f)
 
         # Load LSTM module
-        model.model = utils.LSTMWrapper.load(f"{filepath}__model.pkl")
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        model.model.device = device
-        model.model.to(device)
+        model.model = utils.LSTMWrapper.load(f"{filepath}__model.pkl", device)
         model.model.eval()
         return model
