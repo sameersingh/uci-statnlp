@@ -1,0 +1,7 @@
+{
+    "type": "reader.SpanReader",
+    "answer_selection": "first",
+    "model_name": "dmis-lab/biobert-large-cased-v1.1-squad",
+    "device": "cuda",
+    "batch_size": 8
+}

@@ -1,0 +1,7 @@
+{
+    "type": "retriever.BM25Retriever",
+    "tokenizer": "nltk-punct",
+    "k1": 1.5,
+    "b": 0.75, 
+    "epsilon": 0.25
+}
