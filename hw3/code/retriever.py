@@ -212,6 +212,14 @@ class FaissIndexMixin:
             self.index.add(embeddings)
             self.save_index(self.index_path)
 
+    def fit(self, corpus: List[str]):
+        """Indexes the documents."""
+        self.documents = corpus
+
+        if self.index.ntotal == 0:
+            vect_docs = self.encode_documents(corpus)
+            self._fit(vect_docs)
+
     def load_index(self, filepath: str) -> faiss.IndexFlatL2:
         if filepath is not None and os.path.exists(filepath):
             index = faiss.read_index(filepath)
