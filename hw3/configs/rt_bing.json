@@ -1,0 +1,4 @@
+{
+    "type": "retriever.BingRetriever",
+    "api_key": "<YOUR API KEY>"
+}

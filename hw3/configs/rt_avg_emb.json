@@ -1,0 +1,7 @@
+{
+    "type": "retriever.AvgWordEmbeddingRetriever",
+    "tokenizer": "nltk-punct",
+    "embedding_path": "../glove.6B.300d.txt",
+    "embedding_dim": 300,
+    "index_path": "../results/avg_glove300d_emb.faiss.index"
+}
