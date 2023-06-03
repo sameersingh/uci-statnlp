@@ -9,7 +9,6 @@ Consider the following structure:
 1. [Installation and Setup](#installation-and-setup)
 2. [Task 1: Improving the reader](#tasks)
 2. [Task 2: Improving the retriever](#tasks)
-2. [Task 3: Improving the answer selection strategy](#tasks)
 3. [Code Structure](#repository-structure)
 
 
@@ -167,15 +166,6 @@ Reader Exact Match: 0.59%
 
 Notice, that for BM25 the retriever recall@10 is 90.21% (see line `Retriever R@10: 90.21%`).
 
-
-### Task 3. Implement a confidence-based answer selection strategy in `reader.py`
-
-So far, we have been assuming that we have a perfect retriever and that, indeed, the most relevant document will be the first document.
-Unfortunately, this may not always be the case.
-
-Your task is to implement a confidence-based answer selection strategy. You should modify the method `Reader._select_answer` at `reader.py`.
-Report the reader's performance on the dev set when using this answer selection strategy. 
-You can update the answer selection strategy in your reader config files by updating the `"answer_selection": "first"` to be `"answer_selection": "confidence"` and then running the same commands you run in [Task 1](#task-1-implement-generativeqareader-model-at-readerpy).
 
 ### Running ODQA queries with `run_custom_query.py`
 
