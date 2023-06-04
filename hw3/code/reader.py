@@ -44,22 +44,7 @@ class Reader:
             return candidate_answers[0].text
 
         elif self.mode == "confidence":
-            # ---------------------------------------------------------------------
-            #  TODO - Implement confidence-based answer selection
-            # ---------------------------------------------------------------------
-            # To do this, you will be provided a list of candidate answers in the
-            # same order as the relevant documents for a given query. The Answers
-            # are data.Answer objects, constituting a text and a score.
-            #
-            # You should return the text of the candidate answer whose score is
-            # the largest.
-            # ---------------------------------------------------------------------
-            raise NotImplementedError(f"To be updated by the student: {self.mode}")
-            # ---------------------------------------------------------------------
-            # Don't change anything below this point (: You've done enough!
-            # Keep up with the good work buddy!
-            # ---------------------------------------------------------------------
-            return cand
+            raise NotImplementedError(f"Not currently supported")
         elif self.mode == "debug":
             return [cand for cand in candidate_answers]
         else:
